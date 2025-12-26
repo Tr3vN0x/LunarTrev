@@ -9,7 +9,6 @@ $tagline = "Exploring the night side";
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?php echo $title; ?></title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  
   <style>
     :root {
       --bg-primary: #05070a;
@@ -63,7 +62,7 @@ $tagline = "Exploring the night side";
     .pulse-btn.active { background: var(--accent-moon); color: var(--bg-primary); border-color: var(--accent-moon); }
 
     .comment-sec { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border); font-size: 0.8rem; }
-    .comment-item { margin-bottom: 10px; color: #ced4ff; }
+    .comment-item { margin-bottom: 8px; color: #ced4ff; padding: 5px; background: rgba(255,255,255,0.03); border-radius: 8px; }
     .comment-author { font-weight: 700; color: var(--accent-moon); margin-right: 5px; }
 
     .rank-badge { font-size: 0.6rem; color: var(--accent-moon); background: rgba(165, 180, 252, 0.2); display: inline-block; padding: 2px 10px; border-radius: 10px; margin-top: 5px; text-transform: uppercase; font-weight: 700; }
@@ -101,7 +100,7 @@ $tagline = "Exploring the night side";
     <div id="videos-tab" class="app-section">
       <h3 style="margin-bottom:1rem; padding-left:10px;">Visual Uplinks</h3>
       <div class="card">
-        <input type="text" id="video-url" placeholder="Paste Video URL (MP4/Direct)">
+        <input type="text" id="video-url" placeholder="Paste Direct Video URL (mp4)">
         <input type="text" id="video-desc" placeholder="Video Description">
         <button id="post-video-btn" class="button">Upload Signal</button>
       </div>
@@ -150,7 +149,7 @@ $tagline = "Exploring the night side";
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, GeoPoint, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCGTSiMcNQaAVjkEI_9YRbb2C4CTvqQWEM",
@@ -165,7 +164,7 @@ $tagline = "Exploring the night side";
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- Core Navigation ---
+    // --- Navigation ---
     const switchTab = (tabId) => {
       document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -178,7 +177,7 @@ $tagline = "Exploring the night side";
       item.addEventListener('click', () => switchTab(item.getAttribute('data-tab')));
     });
 
-    // --- Auth & Geo ---
+    // --- Auth Logic ---
     document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -201,15 +200,48 @@ $tagline = "Exploring the night side";
       }
     };
 
-    // --- Posting Logic (Text & Video) ---
+    // --- Request System (Fixed) ---
+    window.sendFreq = async (targetId) => {
+      const u = auth.currentUser;
+      if (u.uid === targetId) return;
+      const uSnap = await getDoc(doc(db, "users", u.uid));
+      const senderData = uSnap.data();
+
+      try {
+        await updateDoc(doc(db, "users", targetId), { 
+          requests: arrayUnion({ id: u.uid, name: senderData.username, img: senderData.profile_Image }) 
+        });
+        alert("Signal sent to pilot.");
+      } catch (e) { alert("Link failure."); }
+    };
+
+    window.acceptReq = async (rid, rname, rimg) => {
+      const u = auth.currentUser;
+      const myRef = doc(db, "users", u.uid);
+      const theirRef = doc(db, "users", rid);
+      const reqObj = { id: rid, name: rname, img: rimg };
+
+      try {
+        await updateDoc(myRef, { friends: arrayUnion(rid), requests: arrayRemove(reqObj) });
+        await updateDoc(theirRef, { friends: arrayUnion(u.uid) });
+      } catch (e) { console.error(e); }
+    };
+
+    window.ignoreReq = async (rid, rname, rimg) => {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), { 
+        requests: arrayRemove({ id: rid, name: rname, img: rimg }) 
+      });
+    };
+
+    // --- Post Logic ---
     const transmitPost = async (content, type = "text", extra = "") => {
       const u = auth.currentUser;
       const uSnap = await getDoc(doc(db, "users", u.uid));
-      const data = uSnap.data();
-      const loc = data.coordinates ? `${data.coordinates.latitude.toFixed(2)}° N, ${data.coordinates.longitude.toFixed(2)}° E` : "Deep Space";
+      const d = uSnap.data();
+      const loc = d.coordinates ? `${d.coordinates.latitude.toFixed(2)}° N, ${d.coordinates.longitude.toFixed(2)}° E` : "Moon";
       
       await addDoc(collection(db, type === "text" ? "posts" : "videos"), {
-        text: content, url: extra, authorId: u.uid, authorName: data.username, authorImg: data.profile_Image,
+        text: content, url: extra, authorId: u.uid, authorName: d.username, authorImg: d.profile_Image,
         authorLoc: loc, likes: [], comments: [], timestamp: serverTimestamp()
       });
     };
@@ -225,7 +257,7 @@ $tagline = "Exploring the night side";
       if(url.trim()) { transmitPost(desc, "video", url); document.getElementById('video-url').value = ""; document.getElementById('video-desc').value = ""; }
     };
 
-    // --- Feed Rendering (Shared for Posts/Videos) ---
+    // --- Feed Renderers ---
     const renderFeed = (coll, targetId, isVideo = false) => {
       onSnapshot(query(collection(db, coll), orderBy("timestamp", "desc")), (snap) => {
         const div = document.getElementById(targetId);
@@ -247,58 +279,25 @@ $tagline = "Exploring the night side";
                 <span class="post-meta">${p.authorLoc}</span>
               </div>
             </div>
-            <div>${p.text}</div>
+            <div style="margin-bottom:10px;">${p.text}</div>
             ${isVideo ? `<div class="video-container"><video src="${p.url}" controls style="width:100%; height:100%;"></video></div>` : ''}
             <button class="pulse-btn ${p.likes.includes(auth.currentUser?.uid) ? 'active' : ''}" onclick="pulse('${coll}', '${pid}')">Pulse (${p.likes.length})</button>
-            <button class="pulse-btn" onclick="toggleComments('${pid}')">Comm (${p.comments.length})</button>
+            <button class="pulse-btn" onclick="toggleComments('${pid}')">Comment (${p.comments.length})</button>
             <div id="comm-box-${pid}" class="hidden comment-sec">
-              <div id="comm-list-${pid}"></div>
-              <input type="text" id="comm-in-${pid}" placeholder="Reply to frequency..." style="width:75%; margin:0;">
-              <button onclick="postComm('${coll}', '${pid}')" style="width:20%; padding:5px; border-radius:10px; border:none; background:var(--accent-moon);">Go</button>
+              <div id="comm-list-${pid}" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
+              <div style="display:flex; gap:5px;">
+                <input type="text" id="comm-in-${pid}" placeholder="Signal back..." style="margin:0;">
+                <button onclick="postComm('${coll}', '${pid}')" style="padding:0 15px; border-radius:12px; border:none; background:var(--accent-moon);">Go</button>
+              </div>
             </div>
           `;
           div.appendChild(card);
-          // Render individual comments
           const list = card.querySelector(`#comm-list-${pid}`);
           p.comments.forEach(c => {
             list.innerHTML += `<div class="comment-item"><span class="comment-author">${c.user}:</span>${c.text}</div>`;
           });
         });
       });
-    };
-
-    // --- Crew & Request Logic ---
-    window.sendFreq = async (targetId) => {
-      const u = auth.currentUser;
-      const uSnap = await getDoc(doc(db, "users", u.uid));
-      await updateDoc(doc(db, "users", targetId), { requests: arrayUnion({id: u.uid, name: uSnap.data().username}) });
-      alert("Frequency sent to pilot.");
-    };
-
-    const syncRequests = (uid) => {
-      onSnapshot(doc(db, "users", uid), (snap) => {
-        const reqs = snap.data().requests || [];
-        const div = document.getElementById('requests-list');
-        div.innerHTML = reqs.length ? "" : "<p style='text-align:center; opacity:0.5;'>No incoming signals.</p>";
-        reqs.forEach(r => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `<p>Signal from <b>${r.name}</b></p>
-            <button onclick="acceptReq('${r.id}', '${r.name}')" class="button" style="margin-bottom:5px;">Accept</button>
-            <button onclick="ignoreReq('${r.id}', '${r.name}')" class="button" style="background:#ff4d4d; color:white;">Ignore</button>`;
-          div.appendChild(card);
-        });
-      });
-    };
-
-    window.acceptReq = async (rid, rname) => {
-      const u = auth.currentUser;
-      await updateDoc(doc(db, "users", u.uid), { friends: arrayUnion(rid), requests: arrayRemove({id: rid, name: rname}) });
-      await updateDoc(doc(db, "users", rid), { friends: arrayUnion(u.uid) });
-    };
-
-    window.ignoreReq = async (rid, rname) => {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), { requests: arrayRemove({id: rid, name: rname}) });
     };
 
     // --- Interactions ---
@@ -320,20 +319,48 @@ $tagline = "Exploring the night side";
       inEl.value = "";
     };
 
-    // --- State Management ---
+    // --- Listeners & State ---
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
         document.getElementById('main-nav').classList.remove('hidden');
-        const snap = await getDoc(doc(db, "users", user.uid));
-        const d = snap.data();
-        document.getElementById('my-avatar').src = d.profile_Image;
-        document.getElementById('disp-name').innerText = d.username;
-        document.getElementById('disp-bio').innerText = d.bio;
-        document.getElementById('disp-rank').innerText = `RANK ${d.rank_level}`;
+        
+        onSnapshot(doc(db, "users", user.uid), (snap) => {
+          const d = snap.data();
+          document.getElementById('my-avatar').src = d.profile_Image;
+          document.getElementById('disp-name').innerText = d.username;
+          document.getElementById('disp-bio').innerText = d.bio;
+          document.getElementById('disp-rank').innerText = `RANK ${d.rank_level}`;
+          
+          // Sync Requests
+          const rList = document.getElementById('requests-list');
+          rList.innerHTML = (d.requests.length) ? "" : "<p style='text-align:center; opacity:0.5;'>No signals.</p>";
+          d.requests.forEach(r => {
+            const rc = document.createElement('div');
+            rc.className = 'card';
+            rc.style.display = 'flex'; rc.style.alignItems='center'; rc.style.gap='10px';
+            rc.innerHTML = `<img src="${r.img}" class="avatar" style="width:30px; height:30px;"> <div style="flex-grow:1;">${r.name}</div>
+            <button onclick="acceptReq('${r.id}','${r.name}','${r.img}')" class="pulse-btn active">Accept</button>`;
+            rList.appendChild(rc);
+          });
+
+          // Sync Crew (Friends Only)
+          const cList = document.getElementById('crew-list');
+          cList.innerHTML = "";
+          if(d.friends.length === 0) cList.innerHTML = "<p style='text-align:center; opacity:0.5;'>Crew empty.</p>";
+          d.friends.forEach(async fid => {
+             const fSnap = await getDoc(doc(db, "users", fid));
+             const f = fSnap.data();
+             cList.innerHTML += `<div class="card" style="display:flex; align-items:center; gap:12px;">
+                <img class="avatar" src="${f.profile_Image}">
+                <div style="flex-grow:1;"><b>${f.username}</b><br><small>RANK ${f.rank_level}</small></div>
+                <div class="status-dot ${f.is_online ? '' : 'offline'}"></div>
+             </div>`;
+          });
+        });
+
         renderFeed("posts", "lunar-feed");
         renderFeed("videos", "video-feed", true);
-        syncRequests(user.uid);
         updateLoc(user.uid);
         switchTab('home-tab');
       } else {
@@ -342,9 +369,18 @@ $tagline = "Exploring the night side";
       }
     });
 
-    // Logout
-    document.getElementById('logout-btn').onclick = () => signOut(auth);
+    window.toggleProfileEdit = (show) => { document.getElementById('profile-display').classList.toggle('hidden', show); document.getElementById('profile-edit').classList.toggle('hidden', !show); };
+    document.getElementById('save-profile-btn').onclick = async () => {
+      const avatar = document.getElementById('edit-avatar-url').value;
+      const bio = document.getElementById('edit-bio').value;
+      await updateDoc(doc(db, "users", auth.currentUser.uid), { profile_Image: avatar, bio: bio });
+      toggleProfileEdit(false);
+    };
 
+    document.getElementById('logout-btn').onclick = async () => {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), { is_online: false });
+      signOut(auth);
+    };
   </script>
 </body>
 </html>
