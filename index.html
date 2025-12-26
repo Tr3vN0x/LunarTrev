@@ -1,5 +1,4 @@
 <?php
-// LunarTrev – Enhanced Lunar Theme
 $title = "LunarTrev";
 $tagline = "Exploring the night side";
 ?>
@@ -9,14 +8,11 @@ $tagline = "Exploring the night side";
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?php echo $title; ?></title>
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root {
       --bg-primary: #05070a;
-      --bg-secondary: #0b0e1a;
-      --accent-moon: #f0f2ff; /* Brighter, more lunar white */
+      --accent-moon: #f0f2ff;
       --accent-nebula: #a5b4fc;
       --text-primary: #e8ebff;
       --text-muted: #848bbd;
@@ -25,154 +21,52 @@ $tagline = "Exploring the night side";
     }
 
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-      /* Subtle radial glow to simulate moonlight from the top right */
+      margin: 0; font-family: 'Poppins', sans-serif;
+      background: var(--bg-primary); color: var(--text-primary);
+      min-height: 100vh; overflow-x: hidden;
       background-image: radial-gradient(circle at 80% 10%, rgba(207, 216, 255, 0.08) 0%, transparent 40%);
     }
 
-    /* Starfield with depth */
+    /* Starfield */
     body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: 
-        radial-gradient(1px 1px at 25% 15%, #fff 50%, transparent 50%),
-        radial-gradient(1.5px 1.5px at 60% 80%, #fff 50%, transparent 50%),
-        radial-gradient(1px 1px at 10% 90%, #fff 50%, transparent 50%),
-        radial-gradient(2px 2px at 90% 40%, rgba(255,255,255,0.3) 50%, transparent 50%);
-      opacity: 0.5;
-      z-index: -1;
+      content: ""; position: fixed; inset: 0;
+      background-image: radial-gradient(1px 1px at 25% 15%, #fff 50%, transparent 50%),
+                        radial-gradient(1px 1px at 60% 80%, #fff 50%, transparent 50%);
+      opacity: 0.3; z-index: -1;
     }
 
-    /* Decorative Moon Element */
-    .moon-orb {
-      position: absolute;
-      top: -50px;
-      right: -50px;
-      width: 250px;
-      height: 250px;
-      background: radial-gradient(circle at 30% 30%, var(--accent-moon), #94a3b8);
-      border-radius: 50%;
-      box-shadow: 0 0 80px rgba(207, 216, 255, 0.2);
-      filter: blur(1px);
-      z-index: -1;
-      opacity: 0.8;
-    }
+    header { text-align: center; padding: 4rem 1.5rem 1rem; }
+    .logo { font-size: 3.5rem; font-weight: 700; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .tagline { color: var(--accent-nebula); letter-spacing: 0.2em; font-size: 0.8rem; text-transform: uppercase; }
 
-    header {
-      text-align: center;
-      padding: 6rem 1.5rem 2rem;
-    }
-
-    .logo {
-      font-size: clamp(3rem, 8vw, 4.5rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to bottom, #ffffff, #94a3b8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
-    }
-
-    .tagline {
-      margin-top: 0.5rem;
-      color: var(--accent-nebula);
-      text-transform: uppercase;
-      letter-spacing: 0.3em;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-      position: relative;
-    }
-
+    main { max-width: 450px; margin: 0 auto; padding: 2rem 1.5rem; }
     .card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 30px;
-      padding: 3rem;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      background: var(--glass-bg); backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: 24px;
+      padding: 2.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
 
-    /* Inner "Crater" decoration */
-    .card::after {
-      content: "";
-      position: absolute;
-      bottom: -20px;
-      right: -20px;
-      width: 100px;
-      height: 100px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 50%;
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-size: 0.75rem; color: var(--accent-nebula); margin-bottom: 0.5rem; text-transform: uppercase; }
+    input {
+      width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border); border-radius: 10px;
+      color: white; outline: none; box-sizing: border-box;
     }
-
-    .card h2 {
-      margin-top: 0;
-      font-size: 2rem;
-      color: var(--accent-moon);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    /* Crescent icon using CSS */
-    .card h2::before {
-      content: "";
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      box-shadow: 6px 6px 0 0 var(--accent-moon);
-      transform: rotate(-45deg);
-      display: inline-block;
-      margin-bottom: 10px;
-    }
+    input:focus { border-color: var(--accent-moon); }
 
     .button {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 1rem 2.5rem;
-      border-radius: 12px;
-      background: var(--accent-moon);
-      color: var(--bg-primary);
-      font-weight: 700;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      width: 100%; padding: 1rem; border: none; border-radius: 10px;
+      background: var(--accent-moon); color: var(--bg-primary);
+      font-weight: 700; cursor: pointer; text-transform: uppercase;
+      transition: 0.3s; margin-top: 1rem;
     }
+    .button:hover { opacity: 0.9; transform: translateY(-2px); }
 
-    .button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(207, 216, 255, 0.4);
-      background: #ffffff;
-    }
-
-    footer {
-      text-align: center;
-      padding: 4rem 1rem 2rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-    }
+    footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.7rem; }
   </style>
 </head>
 <body>
-
-  <div class="moon-orb"></div>
-
   <header>
     <div class="logo">LunarTrev</div>
     <div class="tagline"><?php echo $tagline; ?></div>
@@ -180,21 +74,27 @@ $tagline = "Exploring the night side";
 
   <main>
     <div class="card">
-      <h2>Arrival</h2>
-      <p>
-        Step into the tranquility of the lunar surface. LunarTrev provides a 
-        distraction-free atmosphere for deep focus and midnight creativity.
-      </p>
-      <p>
-        Current phase: <strong>Waxing Gibbous</strong>
-      </p>
-      <a href="#" class="button">Commence</a>
+      <h2 style="margin-top:0; text-align:center;">Create Profile</h2>
+      <form id="signup-form">
+        <div class="form-group">
+          <label>Pilot Name</label>
+          <input type="text" id="username" placeholder="MoonWalker" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>Security Key (Password)</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="button">Begin Journey</button>
+      </form>
     </div>
   </main>
 
-  <footer>
-    © <?php echo date("Y"); ?> LUNARTREV // PHASE 0.1
-  </footer>
+  <footer>© <?php echo date("Y"); ?> LUNARTREV // SYSTEM ONLINE</footer>
 
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
