@@ -31,7 +31,7 @@ $tagline = "Exploring the night side";
     .stars { position: fixed; inset: 0; background-image: radial-gradient(1px 1px at 20% 30%, white 80%, transparent 81%), radial-gradient(1.5px 1.5px at 70% 60%, white 80%, transparent 81%); opacity: 0.3; z-index: -2; }
     .moon-orb { position: fixed; top: -60px; right: -60px; width: 300px; height: 300px; background: radial-gradient(circle at 35% 35%, var(--accent-moon) 0%, #475569 100%); border-radius: 50%; box-shadow: 0 0 60px rgba(207, 216, 255, 0.1); z-index: -1; }
 
-    main { max-width: 500px; margin: 0 auto; padding: 2rem 1.5rem 8rem; }
+    main { max-width: 500px; margin: 0 auto; padding: 1rem 1.5rem 8rem; }
     
     .logo-area { text-align: center; padding: 2rem 0; }
     .logo { font-size: 2.8rem; font-weight: 700; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
@@ -48,16 +48,15 @@ $tagline = "Exploring the night side";
     .card {
       background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border); border-radius: 28px;
-      padding: 2.5rem; margin-bottom: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
-    /* Form Styling */
-    input { 
+    input, textarea { 
       width: 100%; padding: 1rem; margin-bottom: 1rem; border-radius: 12px; 
       border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); 
-      color: #fff; outline: none; box-sizing: border-box; 
+      color: #fff; outline: none; box-sizing: border-box; font-family: inherit;
     }
-    input:focus { border-color: var(--accent-moon); }
+    input:focus, textarea:focus { border-color: var(--accent-moon); }
 
     .button { 
       width: 100%; padding: 1rem; border-radius: 12px; border: none; 
@@ -79,10 +78,13 @@ $tagline = "Exploring the night side";
       color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; 
       letter-spacing: 1.5px; cursor: pointer; transition: 0.3s; opacity: 0.6;
     }
-    .nav-item.active { color: var(--accent-moon); opacity: 1; font-weight: 700; border-bottom: 2px solid var(--accent-moon); }
+    .nav-item.active { color: var(--accent-moon); opacity: 1; font-weight: 700; }
 
     .hidden { display: none; }
     .status-msg { font-size: 0.8rem; text-align: center; color: var(--accent-nebula); margin-top: 10px; }
+
+    /* Post Styling */
+    .post-meta { font-size: 0.7rem; color: var(--accent-nebula); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
 <body>
@@ -92,7 +94,7 @@ $tagline = "Exploring the night side";
 
   <div class="logo-area">
     <div class="logo">LunarTrev</div>
-    <div style="font-size:0.7rem; color:var(--accent-nebula); letter-spacing:0.3em; text-transform:uppercase;">Phase 1.0</div>
+    <div style="font-size:0.7rem; color:var(--accent-nebula); letter-spacing:0.3em; text-transform:uppercase;">Deep Space Feed</div>
   </div>
 
   <main>
@@ -100,26 +102,28 @@ $tagline = "Exploring the night side";
         <div class="card">
             <h2 style="margin-top:0; text-align:center;">Initiate Profile</h2>
             <form id="auth-form">
-                <input type="text" id="reg-username" placeholder="Pilot Name (e.g. Apollo)">
+                <input type="text" id="reg-username" placeholder="Pilot Name">
                 <input type="email" id="email" placeholder="Earth Email" required>
                 <input type="password" id="password" placeholder="Security Key" required>
-                <button type="submit" class="button" id="auth-btn">Launch Account</button>
+                <button type="submit" class="button">Launch Account</button>
             </form>
             <div id="auth-status" class="status-msg"></div>
         </div>
     </div>
 
     <div id="home-tab" class="app-section">
-      <div class="card">
-        <h3 style="margin-top:0;">Lunar Feed</h3>
-        <p style="color:var(--text-muted); font-style:italic;">No transmissions found in this sector yet.</p>
+      <div class="card" style="padding: 1.5rem;">
+        <h4 style="margin: 0 0 1rem 0; font-size: 0.7rem; color: var(--accent-nebula); letter-spacing: 2px;">NEW TRANSMISSION</h4>
+        <textarea id="post-content" placeholder="Broadcast to the sector..." rows="3"></textarea>
+        <button id="send-btn" class="button" style="padding: 10px;">Send Pulse</button>
       </div>
+      <div id="lunar-feed"></div>
     </div>
 
     <div id="discover-tab" class="app-section">
       <div class="card">
         <h3 style="margin-top:0;">Nearby Pilots</h3>
-        <p>Searching frequencies...</p>
+        <div id="crew-list"><p>Scanning frequencies...</p></div>
       </div>
     </div>
 
@@ -128,7 +132,7 @@ $tagline = "Exploring the night side";
         <h3 style="margin-top:0;">System Data</h3>
         <p>Pilot: <strong id="disp-name">...</strong></p>
         <p>Rank: <span id="disp-rank" style="color:var(--accent-nebula);">...</span></p>
-        <button id="logout-btn" style="margin-top:2rem; background:transparent; border:1px solid #ff4d4d; color:#ff4d4d; padding:10px; width:100%; border-radius:10px; cursor:pointer;">Eject (Logout)</button>
+        <button id="logout-btn" style="margin-top:2rem; background:transparent; border:1px solid #ff4d4d; color:#ff4d4d; padding:10px; width:100%; border-radius:10px; cursor:pointer;">Eject Session</button>
       </div>
     </div>
   </main>
@@ -142,7 +146,7 @@ $tagline = "Exploring the night side";
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCGTSiMcNQaAVjkEI_9YRbb2C4CTvqQWEM",
@@ -157,61 +161,84 @@ $tagline = "Exploring the night side";
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // FIX: Tab Switcher (Module Compatible)
+    // TAB SYSTEM
     const switchTab = (tabId) => {
       document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      
       document.getElementById(tabId).classList.add('active');
       document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
     };
 
-    // Attach click events to nav items
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => switchTab(item.getAttribute('data-tab')));
     });
 
-    // Handle Auth Submission
-    const authForm = document.getElementById('auth-form');
-    authForm.addEventListener('submit', async (e) => {
+    // AUTH LOGIC
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const status = document.getElementById('auth-status');
-      status.innerText = "Synchronizing with Lunar base...";
-      
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const username = document.getElementById('reg-username').value;
 
       try {
-        // We assume signup mode for this specific form
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, "users", userCred.user.uid), {
-          username: username || "Unknown Pilot",
+          username: username || "Pilot",
           rank: "Stargazer",
           joinedAt: serverTimestamp(),
           bio: "Just landed."
         });
       } catch (err) {
-        // If user already exists, try logging them in
         if (err.code === 'auth/email-already-in-use') {
-           try { await signInWithEmailAndPassword(auth, email, password); } 
-           catch (e) { status.innerText = "Error: " + e.message; }
-        } else {
-           status.innerText = "Error: " + err.message;
-        }
+          await signInWithEmailAndPassword(auth, email, password);
+        } else { status.innerText = err.message; }
       }
     });
 
-    // AUTH OBSERVER (The Core Brain)
+    // POSTING LOGIC
+    document.getElementById('send-btn').addEventListener('click', async () => {
+      const content = document.getElementById('post-content').value;
+      const user = auth.currentUser;
+      const pilotName = document.getElementById('disp-name').innerText;
+
+      if (content.trim() === "" || !user) return;
+
+      try {
+        await addDoc(collection(db, "posts"), {
+          text: content,
+          authorId: user.uid,
+          authorName: pilotName,
+          timestamp: serverTimestamp()
+        });
+        document.getElementById('post-content').value = "";
+      } catch (err) { console.error(err); }
+    });
+
+    // FEED LISTENER
+    const feedQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    onSnapshot(feedQuery, (snapshot) => {
+      const feedDiv = document.getElementById('lunar-feed');
+      feedDiv.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const post = doc.data();
+        const time = post.timestamp ? new Date(post.timestamp.seconds * 1000).toLocaleTimeString() : "...";
+        feedDiv.innerHTML += `
+          <div class="card" style="padding:1.5rem; margin-bottom:1rem;">
+            <div class="post-meta">${post.authorName} // ${time}</div>
+            <div style="font-size:0.95rem;">${post.text}</div>
+          </div>`;
+      });
+    });
+
+    // SESSION OBSERVER
     onAuthStateChanged(auth, async (user) => {
       const authView = document.getElementById('auth-view');
       const nav = document.getElementById('main-nav');
-      
       if (user) {
         authView.classList.remove('active');
         nav.classList.remove('hidden');
         switchTab('home-tab');
-
         const snap = await getDoc(doc(db, "users", user.uid));
         if (snap.exists()) {
           document.getElementById('disp-name').innerText = snap.data().username;
