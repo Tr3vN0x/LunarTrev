@@ -15,9 +15,9 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
   <meta name="description" content="<?php echo $description; ?>">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="<?php echo $title; ?> | <?php echo $tagline; ?>">
-  <meta property="og:description" content="<?php echo $description; ?>">
-  <meta property="og:image" content="<?php echo $preview_image; ?>">
+  <meta property="og:title" content="<LunarTrev>">
+  <meta property="og:description" content="<Welcome to a night social media experience.>">
+  <meta property="og:image" content="<>">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -169,25 +169,16 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
     let activeChatListener = null;
     let isInitialLoad = true;
 
-    // --- MODERATION ---
     const TRUSTED_DOMAINS = ["imgur.com", "i.imgur.com", "discordapp.com", "cdn.discordapp.com", "images.unsplash.com", "media.giphy.com", "dicebear.com", "api.dicebear.com"];
-    const BANNED_WORDS = ["badword1", "badword2"]; 
+    const BANNED_WORDS = ["badword1"];
 
     const getBadgeHTML = (uid) => uid === ownerId ? `<span class="badge badge-owner">Owner</span>` : "";
-    const formatTime = (ts) => ts ? ts.toDate().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }) + " EST" : "...";
+    const formatTime = (ts) => ts ? ts.toDate().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : "...";
     
-    const isSafe = (text) => {
-        if (!text) return true;
-        const lower = text.toLowerCase();
-        return !BANNED_WORDS.some(word => lower.includes(word));
-    };
-
+    const isSafe = (text) => !BANNED_WORDS.some(word => text?.toLowerCase().includes(word));
     const isDomainTrusted = (url) => {
         if (!url) return true;
-        try {
-            const domain = new URL(url).hostname.replace('www.', '');
-            return TRUSTED_DOMAINS.includes(domain);
-        } catch (e) { return false; }
+        try { return TRUSTED_DOMAINS.includes(new URL(url).hostname.replace('www.', '')); } catch { return false; }
     };
 
     window.switchTab = (id) => {
@@ -199,7 +190,56 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
     };
     document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.onclick = () => switchTab(i.dataset.tab));
 
-    // --- CORE AUTH & SYNC ---
+    // --- CHAT LOGIC RE-FIXED ---
+    window.openChat = async (targetId, name, img) => {
+      const myId = auth.currentUser.uid;
+      const mySnap = await getDoc(doc(db, "users", myId));
+      const myData = mySnap.data();
+      const chatId = [myId, targetId].sort().join('_');
+      
+      document.getElementById('chat-target-name').innerText = name;
+      document.getElementById('chat-target-img').src = img;
+      document.getElementById('chat-overlay').style.display = 'flex';
+      
+      const box = document.getElementById('chat-messages');
+      if(activeChatListener) activeChatListener();
+
+      const q = query(collection(db, "messages"), where("chatId", "==", chatId), orderBy("timestamp", "asc"));
+      activeChatListener = onSnapshot(q, (snap) => {
+        box.innerHTML = "";
+        snap.forEach(d => {
+          const m = d.data(); const isMe = m.sender === myId;
+          const div = document.createElement('div');
+          div.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
+          div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <img src="${isMe ? myData.profile_Image : img}" class="avatar" style="width:20px; height:20px;">
+              <span style="font-size:0.7rem; font-weight:700;">${isMe ? myData.username : name}</span>
+            </div>
+            <div class="bubble">
+              ${m.text}
+              ${m.media ? `<img src="${m.media}" class="chat-img">` : ''}
+            </div>
+            <div class="msg-time">${formatTime(m.timestamp)}</div>
+          `;
+          box.appendChild(div);
+        });
+        box.scrollTop = box.scrollHeight;
+      });
+
+      document.getElementById('chat-send-btn').onclick = async () => {
+        const txt = document.getElementById('chat-input').value.trim();
+        const med = document.getElementById('chat-img-input').value.trim();
+        if(!txt && !med) return;
+        if(!isSafe(txt) || !isSafe(med)) return alert("Protocol violation.");
+        if(med && !isDomainTrusted(med)) return alert("Untrusted relay.");
+
+        await addDoc(collection(db, "messages"), { chatId, sender: myId, text: txt, media: med, timestamp: serverTimestamp() });
+        document.getElementById('chat-input').value = "";
+        document.getElementById('chat-img-input').value = "";
+      };
+    };
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
@@ -208,10 +248,7 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
 
         onSnapshot(doc(db, "users", user.uid), (snap) => {
           const d = snap.data(); if(!d) return;
-          
-          // --- DYNAMIC WELCOME MESSAGE ---
           document.getElementById('welcome-text').innerText = `Welcome ${d.username} to LunarTrev`;
-          
           document.getElementById('profile-preview-img').src = d.profile_Image;
           document.getElementById('edit-avatar-url').value = d.profile_Image;
           document.getElementById('edit-username').value = d.username;
@@ -219,7 +256,8 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
           
           const crewList = document.getElementById('crew-list'); crewList.innerHTML = "";
           (d.friends || []).forEach(async fid => {
-             const u = (await getDoc(doc(db, "users", fid))).data();
+             const uSnap = await getDoc(doc(db, "users", fid));
+             const u = uSnap.data();
              const div = document.createElement('div'); div.className = 'card'; div.style = "display:flex; align-items:center; gap:12px; cursor:pointer;";
              div.innerHTML = `<img src="${u.profile_Image}" class="avatar" style="width:40px; height:40px;"> <div><b>${u.username}</b>${getBadgeHTML(fid)}<br><small>${u.bio || "Active Pilot."}</small></div>`;
              div.onclick = () => openChat(fid, u.username, u.profile_Image);
@@ -227,11 +265,11 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
           });
         });
 
-        // Feed logic remains the same...
         onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
           const feed = document.getElementById('lunar-feed'); feed.innerHTML = "";
           snap.forEach(d => {
-            const p = d.data(); const echoes = p.echoes || []; const isEchoed = echoes.includes(user.uid);
+            const p = d.data(); const echoes = p.echoes || [];
+            const isEchoed = echoes.includes(user.uid);
             const canDelete = p.authorId === user.uid || user.uid === ownerId;
             const card = document.createElement('div'); card.className = 'card';
             card.innerHTML = `
@@ -239,7 +277,7 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
               <div style="display:flex; gap:15px; align-items:flex-start;">
                 <img src="${p.authorImg}" class="avatar" style="width:40px; height:40px;">
                 <div style="flex:1;">
-                  <b>${p.authorName}${getBadgeHTML(p.authorId)}<span class="timestamp">${formatTime(p.timestamp)}</span></b>
+                  <b>${p.authorName}${getBadgeHTML(p.authorId)} <span class="timestamp">${formatTime(p.timestamp)}</span></b>
                   <p style="margin: 5px 0;">${p.text}</p>
                   ${p.imageUrl ? `<img src="${p.imageUrl}" class="post-img">` : ''}
                   <button onclick="toggleEcho('${d.id}', ${isEchoed})" style="background:none; border:none; color:${isEchoed?'var(--accent-nebula)':'var(--text-muted)'}; cursor:pointer; font-size:0.75rem; margin-top:10px; padding:0;">
@@ -250,15 +288,14 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
             feed.appendChild(card);
           });
         });
-      } else { document.getElementById('auth-view').classList.add('active'); document.getElementById('main-nav').classList.add('hidden'); }
+      }
     });
 
-    // --- BUTTON LOGIC ---
     document.getElementById('send-btn').onclick = async () => {
       const text = document.getElementById('post-content').value.trim();
       const img = document.getElementById('post-image-url').value.trim();
-      if(!isSafe(text) || !isSafe(img)) return alert("Moderation: Content rejected.");
-      if(img && !isDomainTrusted(img)) return alert("Host rejected.");
+      if(!isSafe(text) || !isSafe(img)) return alert("Broadcast blocked.");
+      if(img && !isDomainTrusted(img)) return alert("Untrusted host.");
       if(!text && !img) return;
       const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
       await addDoc(collection(db, "posts"), { text, imageUrl: img, authorId: auth.currentUser.uid, authorName: u.username, authorImg: u.profile_Image, timestamp: serverTimestamp(), echoes: [] });
@@ -271,19 +308,18 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         await setDoc(doc(db, "users", cred.user.uid), { username: user, profile_Image: `https://api.dicebear.com/7.x/bottts/svg?seed=${user}`, bio: "New Pilot.", friends: [], requests: [] });
-      } catch (err) { await signInWithEmailAndPassword(auth, email, pass); }
+      } catch { await signInWithEmailAndPassword(auth, email, pass); }
     };
 
     window.toggleEcho = async (postId, echoed) => { await updateDoc(doc(db, "posts", postId), { echoes: echoed ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) }); };
     window.deletePost = async (id) => { if(confirm("Sever transmission?")) await deleteDoc(doc(db, "posts", id)); };
-    window.closeChat = () => { document.getElementById('chat-overlay').style.display = 'none'; };
+    window.closeChat = () => { document.getElementById('chat-overlay').style.display = 'none'; if(activeChatListener) activeChatListener(); };
     window.auth = auth;
 
-    // Background animation
     const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d'); let stars = [];
     const initStars = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = Array.from({length: 200}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2, o: Math.random() })); };
     const animateStars = () => { ctx.clearRect(0,0,canvas.width,canvas.height); stars.forEach(s => { s.o += 0.005; ctx.fillStyle = `rgba(240,242,255, ${Math.abs(Math.sin(s.o))})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animateStars); };
-    initStars(); animateStars(); window.onresize = initStars;
+    initStars(); animateStars();
   </script>
 </body>
 </html>
