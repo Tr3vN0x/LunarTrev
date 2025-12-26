@@ -2,7 +2,7 @@
 $title = "LunarTrev";
 $tagline = "Exploring the night side";
 $description = "A private frequency for pilots exploring the lunar surface. Share broadcasts, secure transmissions, and coordinate your crew.";
-$preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1000"; // A high-quality space image
+$preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1000";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,16 +13,11 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
   <title><?php echo $title; ?></title>
   <meta name="title" content="<?php echo $title; ?>">
   <meta name="description" content="<?php echo $description; ?>">
-
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://lunartrev.web.app/"> <meta property="og:title" content="<?php echo $title; ?> | <?php echo $tagline; ?>">
+  <meta property="og:title" content="<?php echo $title; ?> | <?php echo $tagline; ?>">
   <meta property="og:description" content="<?php echo $description; ?>">
   <meta property="og:image" content="<?php echo $preview_image; ?>">
-
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://lunartrev.web.app/">
-  <meta property="twitter:title" content="<?php echo $title; ?>">
-  <meta property="twitter:description" content="<?php echo $description; ?>">
   <meta property="twitter:image" content="<?php echo $preview_image; ?>">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -175,8 +170,27 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
     let activeChatListener = null;
     let isInitialLoad = true;
 
+    // --- MODERATION LISTS ---
+    const TRUSTED_DOMAINS = ["imgur.com", "i.imgur.com", "discordapp.com", "cdn.discordapp.com", "images.unsplash.com", "media.giphy.com", "dicebear.com", "api.dicebear.com"];
+    const BANNED_WORDS = ["badword1", "badword2"]; 
+
+    // --- UTILS ---
     const getBadgeHTML = (uid) => uid === ownerId ? `<span class="badge badge-owner">Owner</span>` : "";
     const formatTime = (ts) => ts ? ts.toDate().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }) + " EST" : "...";
+    
+    const isSafe = (text) => {
+        if (!text) return true;
+        const lower = text.toLowerCase();
+        return !BANNED_WORDS.some(word => lower.includes(word));
+    };
+
+    const isDomainTrusted = (url) => {
+        if (!url) return true;
+        try {
+            const domain = new URL(url).hostname.replace('www.', '');
+            return TRUSTED_DOMAINS.includes(domain);
+        } catch (e) { return false; }
+    };
 
     window.switchTab = (id) => {
       document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
@@ -187,23 +201,21 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
     };
     document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.onclick = () => switchTab(i.dataset.tab));
 
-    window.toggleEcho = async (postId, currentlyEchoed) => {
-      const ref = doc(db, "posts", postId);
-      const uid = auth.currentUser.uid;
-      await updateDoc(ref, { echoes: currentlyEchoed ? arrayRemove(uid) : arrayUnion(uid) });
-    };
-
-    window.deletePost = async (id) => { if(confirm("Sever transmission?")) await deleteDoc(doc(db, "posts", id)); };
-
+    // --- BROADCAST ---
     document.getElementById('send-btn').onclick = async () => {
       const text = document.getElementById('post-content').value.trim();
       const img = document.getElementById('post-image-url').value.trim();
+      
+      if(!isSafe(text) || !isSafe(img)) return alert("TRANSMISSION REJECTED: Inappropriate content.");
+      if(img && !isDomainTrusted(img)) return alert("SIGNAL BLOCKED: Untrusted image host.");
+      
       if(!text && !img) return;
       const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
       await addDoc(collection(db, "posts"), { text, imageUrl: img, authorId: auth.currentUser.uid, authorName: u.username, authorImg: u.profile_Image, timestamp: serverTimestamp(), echoes: [] });
       document.getElementById('post-content').value = ""; document.getElementById('post-image-url').value = "";
     };
 
+    // --- CHAT ---
     window.openChat = async (targetId, name, img) => {
         const myId = auth.currentUser.uid;
         const myData = (await getDoc(doc(db, "users", myId))).data();
@@ -225,10 +237,7 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
                     <span style="font-size:0.75rem; font-weight:700;">${isMe?myData.username:name}</span>
                     ${getBadgeHTML(m.sender)}
                   </div>
-                  <div class="bubble">
-                    ${m.text}
-                    ${m.media ? `<img src="${m.media}" class="chat-img">` : ''}
-                  </div>
+                  <div class="bubble">${m.text}${m.media ? `<img src="${m.media}" class="chat-img">` : ''}</div>
                   <div class="msg-time">${formatTime(m.timestamp)}</div>`;
                 box.appendChild(wrapper);
             });
@@ -236,24 +245,17 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
         });
 
         document.getElementById('chat-send-btn').onclick = async () => {
-            const inp = document.getElementById('chat-input');
-            const med = document.getElementById('chat-img-input');
-            if(!inp.value.trim() && !med.value.trim()) return;
-            await addDoc(collection(db, "messages"), { chatId, sender: myId, text: inp.value, media: med.value.trim(), timestamp: serverTimestamp() });
+            const inp = document.getElementById('chat-input'), med = document.getElementById('chat-img-input');
+            const txt = inp.value.trim(), media = med.value.trim();
+            if(!isSafe(txt) || !isSafe(media)) return alert("MODERATION ALERT: Content rejected.");
+            if(media && !isDomainTrusted(media)) return alert("TRUST ERROR: Media host blocked.");
+            if(!txt && !media) return;
+            await addDoc(collection(db, "messages"), { chatId, sender: myId, text: txt, media: media, timestamp: serverTimestamp() });
             inp.value = ""; med.value = "";
         };
     };
-    window.closeChat = () => { document.getElementById('chat-overlay').style.display = 'none'; };
 
-    document.getElementById('save-profile-btn').onclick = async () => {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        username: document.getElementById('edit-username').value.trim(),
-        profile_Image: document.getElementById('edit-avatar-url').value.trim(),
-        bio: document.getElementById('edit-bio').value.trim()
-      });
-      alert("Identity Updated.");
-    };
-
+    // --- CORE LOGIC ---
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
@@ -302,11 +304,33 @@ $preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?a
       } else { document.getElementById('auth-view').classList.add('active'); document.getElementById('main-nav').classList.add('hidden'); }
     });
 
-    window.toggleEcho = toggleEcho;
-    window.deletePost = deletePost;
-    window.closeChat = closeChat;
+    document.getElementById('save-profile-btn').onclick = async () => {
+      const img = document.getElementById('edit-avatar-url').value.trim();
+      if(img && !isDomainTrusted(img)) return alert("AVATAR REJECTED: Trusted host required.");
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        username: document.getElementById('edit-username').value.trim(),
+        profile_Image: img,
+        bio: document.getElementById('edit-bio').value.trim()
+      });
+      alert("Identity Updated.");
+    };
+
+    document.getElementById('auth-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value, pass = document.getElementById('password').value, user = document.getElementById('reg-username').value;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", cred.user.uid), { username: user, profile_Image: `https://api.dicebear.com/7.x/bottts/svg?seed=${user}`, bio: "New Pilot.", friends: [], requests: [] });
+      } catch (err) { await signInWithEmailAndPassword(auth, email, pass); }
+    };
+
+    // Global Functions
+    window.toggleEcho = async (postId, currentlyEchoed) => { await updateDoc(doc(db, "posts", postId), { echoes: currentlyEchoed ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) }); };
+    window.deletePost = async (id) => { if(confirm("Sever transmission?")) await deleteDoc(doc(db, "posts", id)); };
+    window.closeChat = () => { document.getElementById('chat-overlay').style.display = 'none'; };
     window.auth = auth;
 
+    // Background animation
     const canvas = document.getElementById('starCanvas'); const ctx = canvas.getContext('2d'); let stars = [];
     const initStars = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = Array.from({length: 200}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2, o: Math.random() })); };
     const animateStars = () => { ctx.clearRect(0,0,canvas.width,canvas.height); stars.forEach(s => { s.o += 0.005; ctx.fillStyle = `rgba(240,242,255, ${Math.abs(Math.sin(s.o))})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animateStars); };
