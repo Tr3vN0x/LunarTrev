@@ -28,13 +28,11 @@ $tagline = "Exploring the night side";
       background-image: radial-gradient(circle at 80% 10%, rgba(207, 216, 255, 0.05) 0%, transparent 50%);
     }
 
-    /* Fixed Cosmic Background */
     .stars { position: fixed; inset: 0; background-image: radial-gradient(1px 1px at 20% 30%, white 80%, transparent 81%), radial-gradient(1.5px 1.5px at 70% 60%, white 80%, transparent 81%); opacity: 0.3; z-index: -2; }
     .moon-orb { position: fixed; top: -60px; right: -60px; width: 300px; height: 300px; background: radial-gradient(circle at 35% 35%, var(--accent-moon) 0%, #475569 100%); border-radius: 50%; box-shadow: 0 0 60px rgba(207, 216, 255, 0.1); z-index: -1; }
 
     main { max-width: 500px; margin: 0 auto; padding: 1rem 1.5rem 8rem; }
     
-    /* App Sections */
     .app-section { display: none; animation: moonRise 0.4s ease-out; }
     .app-section.active { display: block; }
     @keyframes moonRise { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -47,26 +45,25 @@ $tagline = "Exploring the night side";
 
     /* Avatars & Status */
     .avatar { width: 48px; height: 48px; border-radius: 50%; background: #111; border: 2px solid var(--glass-border); object-fit: cover; }
-    .status-dot { width: 8px; height: 8px; background: var(--online-glow); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 10px var(--online-glow); }
+    .status-dot { width: 10px; height: 10px; background: var(--online-glow); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--online-glow); }
     .status-dot.offline { background: #444; box-shadow: none; }
 
-    /* Inputs & Buttons */
     input, textarea { width: 100%; padding: 1rem; margin-bottom: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: #fff; outline: none; box-sizing: border-box; font-family: inherit; }
     .button { width: 100%; padding: 1rem; border-radius: 12px; border: none; background: var(--accent-moon); color: var(--bg-primary); font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Navigation */
+    /* Nav Bar */
     .nav-bar { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 380px; background: rgba(10, 15, 30, 0.85); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; padding: 12px; z-index: 100; }
     .nav-item { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; opacity: 0.6; }
     .nav-item.active { color: var(--accent-moon); opacity: 1; font-weight: 700; }
 
-    /* Post Layout */
+    /* Post Styling */
     .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .post-info { display: flex; flex-direction: column; flex-grow: 1; }
-    .post-username { font-weight: 700; font-size: 0.95rem; color: var(--accent-moon); }
-    .post-meta { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+    .post-username { font-weight: 700; font-size: 0.95rem; }
+    .post-meta { font-size: 0.65rem; color: var(--text-muted); }
 
-    .pulse-btn { background: none; border: 1px solid var(--glass-border); color: var(--accent-nebula); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; margin-top: 10px; transition: 0.2s; }
-    .pulse-btn.active { background: var(--accent-moon); color: var(--bg-primary); border-color: var(--accent-moon); }
+    .pulse-btn { background: none; border: 1px solid var(--glass-border); color: var(--accent-nebula); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; margin-top: 10px; }
+    .pulse-btn.active { background: var(--accent-moon); color: var(--bg-primary); }
 
     .hidden { display: none; }
   </style>
@@ -79,8 +76,7 @@ $tagline = "Exploring the night side";
   <main>
     <div id="auth-view" class="app-section active">
         <div class="card" style="text-align:center;">
-            <h2 style="margin-top:0;">LUNARTREV</h2>
-            <p style="font-size:0.7rem; letter-spacing:3px; color:var(--accent-nebula);">IDENTITY REQUIRED</p>
+            <h2>LUNARTREV</h2>
             <form id="auth-form">
                 <input type="text" id="reg-username" placeholder="Pilot Username" required>
                 <input type="email" id="email" placeholder="Earth Email" required>
@@ -93,13 +89,13 @@ $tagline = "Exploring the night side";
     <div id="home-tab" class="app-section">
       <div class="card">
         <textarea id="post-content" placeholder="Broadcast to the sector..." rows="3"></textarea>
-        <button id="send-btn" class="button" style="padding: 10px;">Transmit</button>
+        <button id="send-btn" class="button">Transmit</button>
       </div>
       <div id="lunar-feed"></div>
     </div>
 
     <div id="discover-tab" class="app-section">
-      <h3 style="margin-bottom:1rem; padding-left:10px;">Active Signals</h3>
+      <h3 style="padding-left:10px;">The Crew</h3>
       <div id="crew-list"></div>
     </div>
 
@@ -107,8 +103,8 @@ $tagline = "Exploring the night side";
       <div class="card" style="text-align:center;">
         <img id="my-avatar" class="avatar" style="width:100px; height:100px; margin-bottom:15px;" src="">
         <h2 id="disp-name" style="margin:0;">...</h2>
-        <p id="disp-coords" style="font-size:0.7rem; color:var(--accent-nebula); margin-bottom:10px;">LOC: 0° N, 0° E</p>
-        <p id="disp-bio" style="font-style:italic; font-size:0.85rem; color:var(--text-muted);"></p>
+        <p id="disp-coords" style="font-size:0.7rem; color:var(--accent-nebula);">0° N, 0° E</p>
+        <p id="disp-bio" style="font-style:italic; font-size:0.85rem;"></p>
         <button id="logout-btn" style="margin-top:2rem; background:transparent; border:1px solid #ff4d4d; color:#ff4d4d; padding:10px; width:100%; border-radius:10px; cursor:pointer;">Eject Session</button>
       </div>
     </div>
@@ -138,6 +134,7 @@ $tagline = "Exploring the night side";
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // TAB SYSTEM
     const switchTab = (tabId) => {
       document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -149,7 +146,7 @@ $tagline = "Exploring the night side";
       item.addEventListener('click', () => switchTab(item.getAttribute('data-tab')));
     });
 
-    // SIGNUP / LOGIN
+    // AUTH
     document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -160,20 +157,20 @@ $tagline = "Exploring the night side";
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, "users", userCred.user.uid), {
           username: username,
-          bio: "Just landed on the moon.",
-          coordinates: new GeoPoint(0, 0), // GEOPOINT TYPE
-          friends: [], // ARRAY TYPE
-          is_online: true, // BOOLEAN TYPE
-          joinedAt: serverTimestamp(), // TIMESTAMP TYPE
+          bio: "Just landed.",
+          coordinates: new GeoPoint(0, 0),
+          friends: [],
+          is_online: true,
+          joinedAt: serverTimestamp(),
           profile_Image: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
-          rank_level: 1 // NUMBER TYPE
+          rank_level: 1
         });
       } catch (err) {
         if (err.code === 'auth/email-already-in-use') await signInWithEmailAndPassword(auth, email, password);
       }
     });
 
-    // POSTING WITH USER DATA
+    // POSTING
     document.getElementById('send-btn').addEventListener('click', async () => {
       const content = document.getElementById('post-content').value;
       const user = auth.currentUser;
@@ -200,8 +197,8 @@ $tagline = "Exploring the night side";
       feedDiv.innerHTML = "";
       snapshot.forEach((pDoc) => {
         const p = pDoc.data();
-        const isLiked = p.likes.includes(auth.currentUser?.uid);
-        const time = p.timestamp ? p.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
+        const isLiked = p.likes?.includes(auth.currentUser?.uid);
+        const time = p.timestamp ? p.timestamp.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '...';
         
         const card = document.createElement('div');
         card.className = 'card';
@@ -213,8 +210,8 @@ $tagline = "Exploring the night side";
               <span class="post-meta">${p.authorLoc} • ${time}</span>
             </div>
           </div>
-          <div style="font-size:0.9rem; line-height:1.5;">${p.text}</div>
-          <button class="pulse-btn ${isLiked ? 'active' : ''}">Pulse (${p.likes.length})</button>
+          <div style="font-size:0.9rem;">${p.text}</div>
+          <button class="pulse-btn ${isLiked ? 'active' : ''}">Pulse (${p.likes?.length || 0})</button>
         `;
         card.querySelector('button').onclick = () => {
           updateDoc(doc(db, "posts", pDoc.id), { likes: isLiked ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) });
@@ -223,7 +220,7 @@ $tagline = "Exploring the night side";
       });
     });
 
-    // CREW LISTENER (FOR STATUS)
+    // CREW LISTENER
     onSnapshot(collection(db, "users"), (snapshot) => {
       const crewList = document.getElementById('crew-list');
       crewList.innerHTML = "";
@@ -233,34 +230,32 @@ $tagline = "Exploring the night side";
           <div class="card" style="display:flex; align-items:center; gap:12px; padding:1rem;">
             <img class="avatar" src="${u.profile_Image}">
             <div style="flex-grow:1;">
-              <div style="font-weight:600; font-size:0.9rem;">${u.username}</div>
-              <div style="font-size:0.6rem; color:var(--text-muted);">LEVEL ${u.rank_level} • CREW</div>
+              <div style="font-weight:600;">${u.username}</div>
+              <div style="font-size:0.6rem; color:var(--text-muted);">RANK LEVEL ${u.rank_level}</div>
             </div>
             <div class="status-dot ${u.is_online ? '' : 'offline'}"></div>
           </div>`;
       });
     });
 
-    // GLOBAL AUTH STATE
+    // AUTH STATE
     onAuthStateChanged(auth, async (user) => {
-      const nav = document.getElementById('main-nav');
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
-        nav.classList.remove('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
         switchTab('home-tab');
-        
         const snap = await getDoc(doc(db, "users", user.uid));
         if (snap.exists()) {
           const d = snap.data();
           document.getElementById('disp-name').innerText = d.username;
           document.getElementById('disp-bio').innerText = d.bio;
-          document.getElementById('disp-coords').innerText = `LOC: ${d.coordinates.latitude}° N, ${d.coordinates.longitude}° E`;
           document.getElementById('my-avatar').src = d.profile_Image;
+          document.getElementById('disp-coords').innerText = `${d.coordinates.latitude}° N, ${d.coordinates.longitude}° E`;
           await updateDoc(doc(db, "users", user.uid), { is_online: true });
         }
       } else {
         document.getElementById('auth-view').classList.add('active');
-        nav.classList.add('hidden');
+        document.getElementById('main-nav').classList.add('hidden');
       }
     });
 
