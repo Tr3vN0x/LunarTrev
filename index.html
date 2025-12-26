@@ -34,27 +34,28 @@ $tagline = "Exploring the night side";
     .app-section.active { display: block; }
     .card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 1.2rem; margin-bottom: 1rem; position: relative; }
     .avatar { width: 48px; height: 48px; border-radius: 50%; background: #111; border: 2px solid var(--glass-border); object-fit: cover; }
-    .badge { font-size: 0.55rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 700; text-transform: uppercase; border: 1px solid currentColor; }
-    .badge-owner { color: var(--owner-gold); }
+    .badge { font-size: 0.55rem; padding: 2px 8px; border-radius: 4px; margin-left: 5px; font-weight: 700; text-transform: uppercase; border: 1px solid currentColor; display: inline-block; line-height: 1.2; }
+    .badge-owner { color: var(--owner-gold); border-color: var(--owner-gold); }
     .timestamp { font-size: 0.6rem; color: var(--text-muted); font-family: monospace; margin-left: 8px; }
 
-    /* --- CHAT BUBBLES --- */
+    /* --- CHAT OVERLAY --- */
     #chat-overlay { position: fixed; inset: 0; background: var(--bg-primary); z-index: 1000; display: none; flex-direction: column; }
     #chat-header { padding: 1rem; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 15px; background: var(--glass-bg); }
-    #chat-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; }
+    #chat-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 20px; }
     
-    .msg-wrapper { display: flex; flex-direction: column; max-width: 80%; }
+    /* --- CHAT BUBBLES --- */
+    .msg-wrapper { display: flex; flex-direction: column; max-width: 85%; }
     .msg-wrapper.sent { align-self: flex-end; align-items: flex-end; }
     .msg-wrapper.received { align-self: flex-start; align-items: flex-start; }
 
-    .bubble { padding: 10px 16px; border-radius: 18px; font-size: 0.9rem; line-height: 1.4; position: relative; }
-    .sent .bubble { background: var(--accent-moon); color: var(--bg-primary); border-bottom-right-radius: 4px; }
-    .received .bubble { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid var(--glass-border); border-bottom-left-radius: 4px; }
-    .msg-time { font-size: 0.55rem; color: var(--text-muted); margin-top: 4px; font-family: monospace; }
+    .bubble { padding: 10px 16px; border-radius: 18px; font-size: 0.9rem; line-height: 1.4; position: relative; word-wrap: break-word; }
+    .sent .bubble { background: var(--accent-moon); color: var(--bg-primary); border-top-right-radius: 4px; }
+    .received .bubble { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid var(--glass-border); border-top-left-radius: 4px; }
+    .msg-time { font-size: 0.55rem; color: var(--text-muted); margin-top: 5px; font-family: monospace; }
 
     #chat-input-area { padding: 1rem; display: flex; gap: 10px; background: var(--glass-bg); border-top: 1px solid var(--glass-border); }
 
-    /* --- NAV --- */
+    /* --- NAV & FORMS --- */
     input, textarea { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: #fff; outline: none; font-family: inherit; box-sizing: border-box; }
     .button { width: 100%; padding: 0.8rem; border-radius: 12px; border: none; background: var(--accent-moon); color: var(--bg-primary); font-weight: 700; cursor: pointer; }
     .nav-bar { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 450px; background: rgba(10, 15, 30, 0.9); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
@@ -149,9 +150,18 @@ $tagline = "Exploring the night side";
 
     // --- UTILS ---
     const getBadgeHTML = (uid) => uid === ownerId ? `<span class="badge badge-owner">Owner</span>` : "";
-    const formatTime = (ts) => ts ? ts.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " MST" : "...";
+    
+    const formatTime = (ts) => {
+        if (!ts) return "...";
+        return ts.toDate().toLocaleTimeString('en-US', { 
+            timeZone: 'America/New_York', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false 
+        }) + " EST";
+    };
 
-    // --- TAB SYSTEM ---
+    // --- NAVIGATION ---
     window.switchTab = (id) => {
       document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -167,6 +177,8 @@ $tagline = "Exploring the night side";
     // --- CHAT LOGIC ---
     window.openChat = async (targetId, name, img) => {
         const myId = auth.currentUser.uid;
+        const mySnap = await getDoc(doc(db, "users", myId));
+        const myData = mySnap.data();
         const chatId = [myId, targetId].sort().join('_');
         
         document.getElementById('chat-target-name').innerText = name;
@@ -187,9 +199,22 @@ $tagline = "Exploring the night side";
             snap.forEach(d => {
                 const m = d.data();
                 const isMe = m.sender === myId;
+                const senderName = isMe ? myData.username : name;
+                const senderImg = isMe ? myData.profile_Image : img;
+                const senderUid = m.sender;
+
                 const wrapper = document.createElement('div');
                 wrapper.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
-                wrapper.innerHTML = `<div class="bubble">${m.text}</div><div class="msg-time">${formatTime(m.timestamp)}</div>`;
+                
+                wrapper.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <img src="${senderImg}" class="avatar" style="width:22px; height:22px; border-width:1px;">
+                        <span style="font-size:0.75rem; font-weight:700;">${senderName}</span>
+                        ${getBadgeHTML(senderUid)}
+                    </div>
+                    <div class="bubble">${m.text}</div>
+                    <div class="msg-time">${formatTime(m.timestamp)}</div>
+                `;
                 box.appendChild(wrapper);
             });
             box.scrollTop = box.scrollHeight;
@@ -197,11 +222,12 @@ $tagline = "Exploring the night side";
 
         document.getElementById('chat-send-btn').onclick = async () => {
             const inp = document.getElementById('chat-input');
-            if(!inp.value.trim()) return;
+            const val = inp.value.trim();
+            if(!val) return;
             await addDoc(collection(db, "messages"), {
                 chatId: chatId,
                 sender: myId,
-                text: inp.value,
+                text: val,
                 timestamp: serverTimestamp()
             });
             inp.value = "";
@@ -213,19 +239,17 @@ $tagline = "Exploring the night side";
         if(activeChatListener) activeChatListener();
     };
 
-    // --- APP CORE ---
+    // --- AUTH & DATA CORE ---
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
         document.getElementById('main-nav').classList.remove('hidden');
         
-        // Prevent view reset on every update
         if(isInitialLoad) {
             switchTab('home-tab');
             isInitialLoad = false;
         }
 
-        // Live User Data (Friends/Requests)
         onSnapshot(doc(db, "users", user.uid), (snap) => {
           const d = snap.data(); if(!d) return;
           document.getElementById('welcome-text').innerText = `Welcome, ${d.username}`;
@@ -250,7 +274,6 @@ $tagline = "Exploring the night side";
           });
         });
 
-        // Feed logic
         onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
           const feed = document.getElementById('lunar-feed'); feed.innerHTML = "";
           snap.forEach(d => {
@@ -268,7 +291,7 @@ $tagline = "Exploring the night side";
       }
     });
 
-    // --- ACTIONS ---
+    // --- BUTTON ACTIONS ---
     window.sendRequest = async (targetUid) => { 
         await updateDoc(doc(db, "users", targetUid), { requests: arrayUnion(auth.currentUser.uid) }); 
         alert("Signal Sent."); 
@@ -333,7 +356,7 @@ $tagline = "Exploring the night side";
 
     document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-    // --- STAR ANIMATION ---
+    // --- ANIMATIONS ---
     const canvas = document.getElementById('starCanvas');
     const ctx = canvas.getContext('2d');
     let stars = [];
@@ -347,6 +370,11 @@ $tagline = "Exploring the night side";
       requestAnimationFrame(animateStars);
     };
     initStars(); animateStars(); window.onresize = initStars;
+
+    // Mapping globals for HTML onclicks
+    window.acceptFriend = acceptFriend;
+    window.sendRequest = sendRequest;
+    window.closeChat = closeChat;
   </script>
 </body>
 </html>
