@@ -1,19 +1,23 @@
-
+<?php
+$title = "LunarTrev";
+$tagline = "Exploring the night side";
+$description = "A private frequency for pilots exploring the lunar surface. Share broadcasts, secure transmissions, and coordinate your crew.";
+$preview_image = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1000";
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title><?php echo $title; ?></title>
-  <meta name="title" content="<LunarTrev">
-  <meta name="description" content="<Welcoming night into social media">
+  <title><?php echo $title; ?> | <?php echo $tagline; ?></title>
+  <meta name="title" content="<?php echo $title; ?>">
+  <meta name="description" content="<?php echo $description; ?>">
+
   <meta property="og:type" content="website">
-  <meta property="og:title" content="<LunarTrev>">
-  <meta property="og:description" content="<Adding difference to social media>">
+  <meta property="og:title" content="<?php echo $title; ?> | <?php echo $tagline; ?>">
+  <meta property="og:description" content="<?php echo $description; ?>">
   <meta property="og:image" content="<?php echo $preview_image; ?>">
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:image" content="<?php echo $preview_image; ?>">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -100,21 +104,21 @@
   <main>
     <div id="auth-view" class="app-section active">
         <div class="card" style="text-align:center;">
-          <h2 style="letter-spacing: 5px;">LUNARTREV</h2>
+          <h2 style="letter-spacing: 5px;"><?php echo strtoupper($title); ?></h2>
           <form id="auth-form">
-            <input type="text" id="reg-username" placeholder="Username" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Key" required>
-            <button type="submit" class="button">Connect</button>
+            <input type="text" id="reg-username" placeholder="Pilot Handle" required>
+            <input type="email" id="email" placeholder="Email Frequency" required>
+            <input type="password" id="password" placeholder="Access Key" required>
+            <button type="submit" class="button">Establish Link</button>
           </form>
         </div>
     </div>
 
     <div id="home-tab" class="app-section">
-      <h1 id="welcome-text">Welcome</h1>
+      <h1 id="welcome-text">Connecting...</h1>
       <div class="card">
-        <textarea id="post-content" placeholder="What's on your frequency?" rows="2"></textarea>
-        <input type="text" id="post-image-url" placeholder="Image URL (Optional)">
+        <textarea id="post-content" placeholder="Broadcast a signal..." rows="2"></textarea>
+        <input type="text" id="post-image-url" placeholder="Visual Data URL (Optional)">
         <button id="send-btn" class="button">Transmit Broadcast</button>
       </div>
       <div id="lunar-feed"></div>
@@ -165,11 +169,10 @@
     let activeChatListener = null;
     let isInitialLoad = true;
 
-    // --- MODERATION LISTS ---
+    // --- MODERATION ---
     const TRUSTED_DOMAINS = ["imgur.com", "i.imgur.com", "discordapp.com", "cdn.discordapp.com", "images.unsplash.com", "media.giphy.com", "dicebear.com", "api.dicebear.com"];
     const BANNED_WORDS = ["badword1", "badword2"]; 
 
-    // --- UTILS ---
     const getBadgeHTML = (uid) => uid === ownerId ? `<span class="badge badge-owner">Owner</span>` : "";
     const formatTime = (ts) => ts ? ts.toDate().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }) + " EST" : "...";
     
@@ -196,61 +199,7 @@
     };
     document.querySelectorAll('.nav-item[data-tab]').forEach(i => i.onclick = () => switchTab(i.dataset.tab));
 
-    // --- BROADCAST ---
-    document.getElementById('send-btn').onclick = async () => {
-      const text = document.getElementById('post-content').value.trim();
-      const img = document.getElementById('post-image-url').value.trim();
-      
-      if(!isSafe(text) || !isSafe(img)) return alert("TRANSMISSION REJECTED: Inappropriate content.");
-      if(img && !isDomainTrusted(img)) return alert("SIGNAL BLOCKED: Untrusted image host.");
-      
-      if(!text && !img) return;
-      const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
-      await addDoc(collection(db, "posts"), { text, imageUrl: img, authorId: auth.currentUser.uid, authorName: u.username, authorImg: u.profile_Image, timestamp: serverTimestamp(), echoes: [] });
-      document.getElementById('post-content').value = ""; document.getElementById('post-image-url').value = "";
-    };
-
-    // --- CHAT ---
-    window.openChat = async (targetId, name, img) => {
-        const myId = auth.currentUser.uid;
-        const myData = (await getDoc(doc(db, "users", myId))).data();
-        const chatId = [myId, targetId].sort().join('_');
-        document.getElementById('chat-target-name').innerText = name;
-        document.getElementById('chat-target-img').src = img;
-        document.getElementById('chat-overlay').style.display = 'flex';
-        const box = document.getElementById('chat-messages');
-        if(activeChatListener) activeChatListener();
-        const q = query(collection(db, "messages"), where("chatId", "==", chatId), orderBy("timestamp", "asc"));
-        activeChatListener = onSnapshot(q, (snap) => {
-            box.innerHTML = "";
-            snap.forEach(d => {
-                const m = d.data(); const isMe = m.sender === myId;
-                const wrapper = document.createElement('div'); wrapper.className = `msg-wrapper ${isMe ? 'sent' : 'received'}`;
-                wrapper.innerHTML = `
-                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <img src="${isMe?myData.profile_Image:img}" class="avatar" style="width:22px; height:22px;">
-                    <span style="font-size:0.75rem; font-weight:700;">${isMe?myData.username:name}</span>
-                    ${getBadgeHTML(m.sender)}
-                  </div>
-                  <div class="bubble">${m.text}${m.media ? `<img src="${m.media}" class="chat-img">` : ''}</div>
-                  <div class="msg-time">${formatTime(m.timestamp)}</div>`;
-                box.appendChild(wrapper);
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-
-        document.getElementById('chat-send-btn').onclick = async () => {
-            const inp = document.getElementById('chat-input'), med = document.getElementById('chat-img-input');
-            const txt = inp.value.trim(), media = med.value.trim();
-            if(!isSafe(txt) || !isSafe(media)) return alert("MODERATION ALERT: Content rejected.");
-            if(media && !isDomainTrusted(media)) return alert("TRUST ERROR: Media host blocked.");
-            if(!txt && !media) return;
-            await addDoc(collection(db, "messages"), { chatId, sender: myId, text: txt, media: media, timestamp: serverTimestamp() });
-            inp.value = ""; med.value = "";
-        };
-    };
-
-    // --- CORE LOGIC ---
+    // --- CORE AUTH & SYNC ---
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('auth-view').classList.remove('active');
@@ -259,6 +208,10 @@
 
         onSnapshot(doc(db, "users", user.uid), (snap) => {
           const d = snap.data(); if(!d) return;
+          
+          // --- DYNAMIC WELCOME MESSAGE ---
+          document.getElementById('welcome-text').innerText = `Welcome ${d.username} to LunarTrev`;
+          
           document.getElementById('profile-preview-img').src = d.profile_Image;
           document.getElementById('edit-avatar-url').value = d.profile_Image;
           document.getElementById('edit-username').value = d.username;
@@ -274,6 +227,7 @@
           });
         });
 
+        // Feed logic remains the same...
         onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
           const feed = document.getElementById('lunar-feed'); feed.innerHTML = "";
           snap.forEach(d => {
@@ -299,15 +253,16 @@
       } else { document.getElementById('auth-view').classList.add('active'); document.getElementById('main-nav').classList.add('hidden'); }
     });
 
-    document.getElementById('save-profile-btn').onclick = async () => {
-      const img = document.getElementById('edit-avatar-url').value.trim();
-      if(img && !isDomainTrusted(img)) return alert("AVATAR REJECTED: Trusted host required.");
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        username: document.getElementById('edit-username').value.trim(),
-        profile_Image: img,
-        bio: document.getElementById('edit-bio').value.trim()
-      });
-      alert("Identity Updated.");
+    // --- BUTTON LOGIC ---
+    document.getElementById('send-btn').onclick = async () => {
+      const text = document.getElementById('post-content').value.trim();
+      const img = document.getElementById('post-image-url').value.trim();
+      if(!isSafe(text) || !isSafe(img)) return alert("Moderation: Content rejected.");
+      if(img && !isDomainTrusted(img)) return alert("Host rejected.");
+      if(!text && !img) return;
+      const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
+      await addDoc(collection(db, "posts"), { text, imageUrl: img, authorId: auth.currentUser.uid, authorName: u.username, authorImg: u.profile_Image, timestamp: serverTimestamp(), echoes: [] });
+      document.getElementById('post-content').value = ""; document.getElementById('post-image-url').value = "";
     };
 
     document.getElementById('auth-form').onsubmit = async (e) => {
@@ -319,8 +274,7 @@
       } catch (err) { await signInWithEmailAndPassword(auth, email, pass); }
     };
 
-    // Global Functions
-    window.toggleEcho = async (postId, currentlyEchoed) => { await updateDoc(doc(db, "posts", postId), { echoes: currentlyEchoed ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) }); };
+    window.toggleEcho = async (postId, echoed) => { await updateDoc(doc(db, "posts", postId), { echoes: echoed ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) }); };
     window.deletePost = async (id) => { if(confirm("Sever transmission?")) await deleteDoc(doc(db, "posts", id)); };
     window.closeChat = () => { document.getElementById('chat-overlay').style.display = 'none'; };
     window.auth = auth;
