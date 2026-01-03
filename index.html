@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trevor | Personal Portfolio</title>
+    
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency-systems-filled/96/f39c12/t.png">
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
@@ -267,14 +271,14 @@
     </footer>
 
     <script>
+        // Copy Discord to Clipboard function
         function copyDiscord() {
-            const el = document.createElement('textarea');
-            el.value = 'Tr3vN0x';
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            alert("Discord username copied: Tr3vN0x");
+            const username = "Tr3vN0x";
+            navigator.clipboard.writeText(username).then(() => {
+                alert("Discord username copied: " + username);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
         }
     </script>
 </body>
