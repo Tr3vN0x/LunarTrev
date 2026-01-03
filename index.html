@@ -1,207 +1,186 @@
-<?php
-$title = "QuestBoard";
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title; ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Neon Survivor 2D</title>
     <style>
-        :root {
-            --neon-blue: #00f2ff;
-            --neon-purple: #bc13fe;
-            --dark-space: #050510;
-            --card-bg: rgba(15, 15, 35, 0.8);
+        body { margin: 0; background: #050510; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; filter: drop-shadow(0 0 5px #00f2ff); }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #00f2ff;
+            pointer-events: none; text-shadow: 0 0 5px #00f2ff;
         }
-
-        * { box-sizing: border-box; }
-        body { 
-            margin: 0; font-family: 'Poppins', sans-serif; background: var(--dark-space); color: #fff;
-            background-image: radial-gradient(circle at 50% 50%, #1a1a3a 0%, #050510 100%);
-            min-height: 100vh;
+        .game-over {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: #ff0055; display: none;
         }
-
-        main { max-width: 500px; margin: 0 auto; padding: 40px 20px 100px; }
-        h1 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 4px; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); text-align: center; }
-
-        .card { 
-            background: var(--card-bg); border: 1px solid rgba(0, 242, 255, 0.2); 
-            border-radius: 15px; padding: 20px; margin-bottom: 20px;
-            backdrop-filter: blur(10px); box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        button {
+            background: none; border: 2px solid #00f2ff; color: #00f2ff;
+            padding: 10px 20px; cursor: pointer; font-family: inherit; font-weight: bold;
         }
-
-        /* --- CLASS PICKER --- */
-        .class-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .class-icon { 
-            font-size: 2rem; padding: 10px; border: 1px solid #333; border-radius: 10px; 
-            cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.3);
-        }
-        .class-icon.selected { border-color: var(--neon-blue); background: rgba(0, 242, 255, 0.1); transform: scale(1.1); }
-
-        input, textarea, select { 
-            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; 
-            border: 1px solid #333; background: #000; color: #fff; font-family: inherit;
-        }
-
-        .btn { 
-            width: 100%; padding: 15px; border: none; border-radius: 8px; 
-            background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
-            color: #fff; font-weight: bold; font-family: 'Orbitron', sans-serif; cursor: pointer;
-            text-transform: uppercase; transition: 0.3s;
-        }
-        .btn:hover { box-shadow: 0 0 15px var(--neon-blue); }
-
-        .quest-item { border-left: 4px solid var(--neon-blue); position: relative; }
-        .quest-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .quest-badge { background: var(--neon-blue); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .claim-btn { background: none; border: 1px solid var(--neon-purple); color: var(--neon-purple); padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-
-        .hidden { display: none; }
-        nav { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: space-around; border-top: 1px solid var(--neon-blue); }
     </style>
 </head>
 <body>
 
-<main>
-    <h1>Quest Board</h1>
-
-    <div id="auth-view" class="active">
-        <div class="card">
-            <p style="text-align:center; font-size: 0.8rem; color: var(--neon-blue);">Select Your Hero Class</p>
-            <div class="class-grid" id="class-picker">
-                <div class="class-icon" data-icon="⚔️">⚔️</div>
-                <div class="class-icon" data-icon="🪄">🪄</div>
-                <div class="class-icon" data-icon="🏹">🏹</div>
-                <div class="class-icon" data-icon="🛡️">🛡️</div>
-                <div class="class-icon" data-icon="🧪">🧪</div>
-                <div class="class-icon" data-icon="🥷">🥷</div>
-                <div class="class-icon" data-icon="💎">💎</div>
-                <div class="class-icon" data-icon="🐲">🐲</div>
-            </div>
-            <form id="auth-form">
-                <input type="text" id="username" placeholder="Character Name" required>
-                <input type="email" id="email" placeholder="Holomail (Email)" required>
-                <input type="password" id="password" placeholder="Passkey" required>
-                <button type="submit" class="btn">Enter Realm</button>
-            </form>
-        </div>
+    <div id="ui">
+        <div>CORE_DATA: <span id="score">0</span></div>
+        <div>STABILITY: <span id="health">100</span>%</div>
     </div>
 
-    <div id="board-view" class="hidden">
-        <div class="card">
-            <h3 style="margin-top:0; font-family:'Orbitron'">Post a Bounty</h3>
-            <select id="quest-type">
-                <option value="Combat">Combat / Carry</option>
-                <option value="Trade">Trade Item</option>
-                <option value="Social">Guild Search</option>
-            </select>
-            <textarea id="quest-desc" placeholder="What do you need help with?"></textarea>
-            <button id="post-btn" class="btn">Broadcast Quest</button>
-        </div>
-
-        <div id="quest-list">
-            </div>
+    <div id="game-over" class="game-over">
+        <h1 style="font-size: 3rem;">SYSTEM_CRITICAL</h1>
+        <p>CONNECTION LOST. DATA CORRUPTED.</p>
+        <button onclick="location.reload()">REBOOT SYSTEM</button>
     </div>
-</main>
 
-<nav id="main-nav" class="hidden">
-    <div onclick="location.reload()" style="color:var(--neon-blue); cursor:pointer;">BOARD</div>
-    <div onclick="alert('Messages coming soon!')" style="cursor:pointer;">MESSAGES</div>
-</nav>
+    <canvas id="gameCanvas"></canvas>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const healthEl = document.getElementById('health');
+    const gameOverEl = document.getElementById('game-over');
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCGTSiMcNQaAVjkEI_9YRbb2C4CTvqQWEM", 
-        authDomain: "lunartrev.firebaseapp.com", 
-        projectId: "lunartrev", 
-        storageBucket: "lunartrev.firebasestorage.app", 
-        messagingSenderId: "152908127950", 
-        appId: "1:152908127950:web:6db39b55cbe5d5b0f33a9f" 
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let score = 0;
+    let health = 100;
+    let gameActive = true;
+
+    const player = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        size: 20,
+        speed: 5,
+        color: '#00f2ff'
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const keys = {};
+    const enemies = [];
+    const particles = [];
+    const coins = [];
 
-    let selectedIcon = "⚔️";
+    window.addEventListener('keydown', e => keys[e.code] = true);
+    window.addEventListener('keyup', e => keys[e.code] = false);
 
-    // Class Picker Logic
-    document.querySelectorAll('.class-icon').forEach(icon => {
-        icon.onclick = () => {
-            document.querySelectorAll('.class-icon').forEach(i => i.classList.remove('selected'));
-            icon.classList.add('selected');
-            selectedIcon = icon.dataset.icon;
-        };
-    });
-
-    // Auth
-    document.getElementById('auth-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-
-        try {
-            const cred = await createUserWithEmailAndPassword(auth, email, pass);
-            await setDoc(doc(db, "users", cred.user.uid), { name, icon: selectedIcon });
-        } catch {
-            signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
+    class Enemy {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() < 0.5 ? -20 : canvas.height + 20;
+            this.size = 15;
+            this.speed = 1.5 + (score / 10);
+            this.color = '#ff0055';
         }
-    };
+        update() {
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            this.x += (dx / dist) * this.speed;
+            this.y += (dy / dist) * this.speed;
 
-    onAuthStateChanged(auth, async (user) => {
-        if(user) {
-            document.getElementById('auth-view').classList.add('hidden');
-            document.getElementById('board-view').classList.remove('hidden');
-            document.getElementById('main-nav').classList.remove('hidden');
-
-            // Listen for Quests
-            const q = query(collection(db, "quests"), orderBy("timestamp", "desc"));
-            onSnapshot(q, (snapshot) => {
-                const list = document.getElementById('quest-list');
-                list.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    list.innerHTML += `
-                        <div class="card quest-item">
-                            <div class="quest-header">
-                                <span style="font-size:1.5rem">${data.userIcon}</span>
-                                <strong>${data.userName}</strong>
-                                <span class="quest-badge">${data.type}</span>
-                            </div>
-                            <p style="font-size:0.9rem; margin-bottom:15px;">${data.desc}</p>
-                            <button class="claim-btn" onclick="alert('Quest Claimed! Messenger opening...')">CLAIM BOUNTY</button>
-                        </div>
-                    `;
-                });
-            });
+            // Collision with player
+            if (dist < player.size) {
+                health -= 0.5;
+                if (health <= 0) endGame();
+            }
         }
-    });
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - this.size);
+            ctx.lineTo(this.x + this.size, this.y + this.size);
+            ctx.lineTo(this.x - this.size, this.y + this.size);
+            ctx.fill();
+        }
+    }
 
-    // Post Quest
-    document.getElementById('post-btn').onclick = async () => {
-        const desc = document.getElementById('quest-desc').value;
-        const type = document.getElementById('quest-type').value;
-        if(!desc) return;
+    class Coin {
+        constructor() {
+            this.x = Math.random() * (canvas.width - 40) + 20;
+            this.y = Math.random() * (canvas.height - 40) + 20;
+            this.size = 8;
+        }
+        draw() {
+            ctx.fillStyle = '#bc13fe';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#bc13fe';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
 
-        const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-        const userData = userSnap.data();
+    function spawnStuff() {
+        if (!gameActive) return;
+        if (Math.random() < 0.05) enemies.push(new Enemy());
+        if (coins.length < 5) coins.push(new Coin());
+        setTimeout(spawnStuff, 100);
+    }
 
-        await addDoc(collection(db, "quests"), {
-            desc, type, 
-            userName: userData.name, 
-            userIcon: userData.icon,
-            timestamp: serverTimestamp()
+    function updatePlayer() {
+        if (keys['ArrowUp'] || keys['KeyW']) player.y -= player.speed;
+        if (keys['ArrowDown'] || keys['KeyS']) player.y += player.speed;
+        if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+        if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+
+        // Boundaries
+        player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+        player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+    }
+
+    function checkCoins() {
+        coins.forEach((coin, index) => {
+            const dist = Math.hypot(player.x - coin.x, player.y - coin.y);
+            if (dist < player.size + coin.size) {
+                coins.splice(index, 1);
+                score += 1;
+                scoreEl.innerText = score;
+            }
         });
-        document.getElementById('quest-desc').value = "";
-    };
+    }
 
+    function endGame() {
+        gameActive = false;
+        gameOverEl.style.display = 'block';
+    }
+
+    function animate() {
+        if (!gameActive) return;
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.2)'; // Trail effect
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player
+        ctx.fillStyle = player.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = player.color;
+        ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+        ctx.shadowBlur = 0;
+
+        updatePlayer();
+        checkCoins();
+
+        enemies.forEach((enemy, i) => {
+            enemy.update();
+            enemy.draw();
+        });
+
+        coins.forEach(coin => coin.draw());
+
+        healthEl.innerText = Math.ceil(health);
+        requestAnimationFrame(animate);
+    }
+
+    spawnStuff();
+    animate();
+
+    window.onresize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
 </script>
 </body>
 </html>
