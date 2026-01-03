@@ -3,185 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlockCraft 2D</title>
+    <title>BlockCraft Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: 'Press Start 2P', cursive; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Press Start 2P', cursive; color: white; }
         canvas { display: block; image-rendering: pixelated; }
-        #ui { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0,0,0,0.6); padding: 10px; border: 4px solid #333; }
-        .slot { width: 50px; height: 50px; border: 2px solid #555; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; position: relative; }
-        .slot.active { border-color: #fff; background: rgba(255,255,255,0.2); }
-        #auth-screen { position: absolute; inset: 0; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        input { padding: 10px; margin: 5px; font-family: inherit; }
-        button { padding: 10px 20px; font-family: inherit; cursor: pointer; background: #5a5; color: #fff; border: none; }
+        
+        #hud { position: absolute; top: 20px; left: 20px; pointer-events: none; font-size: 12px; }
+        #inventory { 
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 8px; background: rgba(0,0,0,0.8); padding: 8px; border: 4px solid #555;
+        }
+        .slot { 
+            width: 45px; height: 45px; border: 2px solid #444; position: relative;
+            display: flex; align-items: center; justify-content: center; background: #222;
+        }
+        .slot.active { border-color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
+        .count { position: absolute; bottom: 2px; right: 2px; font-size: 8px; }
+        
+        #crafting {
+            position: absolute; right: 20px; top: 20px; background: rgba(0,0,0,0.8);
+            padding: 15px; border: 2px solid #5a5; font-size: 10px;
+        }
+        .craft-btn { background: #5a5; border: none; color: white; padding: 5px; cursor: pointer; margin-top: 5px; width: 100%; font-family: inherit; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <h1 style="color: #fff;">BLOCKCRAFT 2D</h1>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Passkey">
-        <button id="login-btn">ENTER WORLD</button>
+    <div id="hud">
+        <div id="time-display">DAY 1 - 12:00</div>
+        <div style="color: #ff4d4d; margin-top:10px;">HP: <span id="hp">100</span></div>
     </div>
 
-    <div id="ui">
-        <div class="slot active" data-id="1">Dirt</div>
-        <div class="slot" data-id="2">Stone</div>
-        <div class="slot" data-id="3">Wood</div>
-        <div class="slot" data-id="4">Leaves</div>
+    <div id="crafting">
+        CRAFTING
+        <hr>
+        <div id="recipe-sword">
+            WOOD SWORD<br>(2 Wood)
+            <button class="craft-btn" onclick="game.craft('sword')">CRAFT</button>
+        </div>
+    </div>
+
+    <div id="inventory">
+        <div class="slot active" data-index="0"><span id="inv-0">0</span></div>
+        <div class="slot" data-index="1"><span id="inv-1">0</span></div>
+        <div class="slot" data-index="2"><span id="inv-2">0</span></div>
+        <div class="slot" data-index="3"><span id="inv-3">0</span></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCGTSiMcNQaAVjkEI_9YRbb2C4CTvqQWEM", 
-        authDomain: "lunartrev.firebaseapp.com", 
-        projectId: "lunartrev", 
-        storageBucket: "lunartrev.firebasestorage.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
+    // Simplified Logic for local play - Firebase can be added back easily
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // --- GAME CONSTANTS ---
     const TILE_SIZE = 40;
-    const world = { width: 100, height: 40, tiles: [] };
-    const player = { x: 400, y: 100, vx: 0, vy: 0, w: 30, h: 60, speed: 4, jump: 12, grounded: false };
-    const camera = { x: 0, y: 0 };
-    let selectedTile = 1;
-    let currentUser = null;
-
-    // --- WORLD GENERATION ---
-    function generateWorld() {
-        for (let x = 0; x < world.width; x++) {
-            world.tiles[x] = [];
-            let surface = 15 + Math.floor(Math.sin(x * 0.2) * 3);
-            for (let y = 0; y < world.height; y++) {
-                if (y > surface + 4) world.tiles[x][y] = 2; // Stone
-                else if (y > surface) world.tiles[x][y] = 1; // Dirt
-                else world.tiles[x][y] = 0; // Air
-            }
-        }
-    }
-
-    // --- AUTH ---
-    document.getElementById('login-btn').onclick = async () => {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-        try {
-            await createUserWithEmailAndPassword(auth, email, pass);
-        } catch {
-            await signInWithEmailAndPassword(auth, email, pass);
-        }
+    const world = { width: 200, height: 40, tiles: [], enemies: [] };
+    const player = { 
+        x: 400, y: 100, vx: 0, vy: 0, w: 26, h: 54, 
+        hp: 100, inv: [10, 0, 0, 0], // Dirt, Stone, Wood, Sword
+        dir: 1, anim: 0, swinging: 0 
     };
+    
+    let selectedSlot = 0;
+    let time = 0; // 0 to 24000
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('auth-screen').style.display = 'none';
-            generateWorld();
-            const snap = await getDoc(doc(db, "saves", user.uid));
-            if(snap.exists()) player.x = snap.data().x;
-            requestAnimationFrame(gameLoop);
-            setInterval(save, 5000);
+    // Initialize World
+    for(let x=0; x<world.width; x++) {
+        world.tiles[x] = [];
+        let surf = 20 + Math.sin(x*0.1)*5;
+        for(let y=0; y<world.height; y++) {
+            if(y > surf + 5) world.tiles[x][y] = 2; // Stone
+            else if(y > surf) world.tiles[x][y] = 1; // Dirt
+            else if(y > surf - 1 && Math.random() < 0.1) world.tiles[x][y] = 3; // Wood (Tree)
+            else world.tiles[x][y] = 0;
         }
-    });
-
-    async function save() {
-        if(currentUser) await setDoc(doc(db, "saves", currentUser.uid), { x: player.x });
     }
 
-    // --- INPUTS ---
     const keys = {};
     window.onkeydown = e => keys[e.code] = true;
     window.onkeyup = e => keys[e.code] = false;
+
+    // Interaction
     canvas.onmousedown = (e) => {
-        const tx = Math.floor((e.clientX + camera.x) / TILE_SIZE);
-        const ty = Math.floor((e.clientY + camera.y) / TILE_SIZE);
-        if (e.button === 0) world.tiles[tx][ty] = 0; // Break
-        else world.tiles[tx][ty] = selectedTile; // Build
-    };
-    canvas.oncontextmenu = (e) => e.preventDefault();
-
-    function update() {
-        if (keys['KeyA']) player.vx = -player.speed;
-        else if (keys['KeyD']) player.vx = player.speed;
-        else player.vx *= 0.8;
-
-        if (keys['Space'] && player.grounded) {
-            player.vy = -player.jump;
-            player.grounded = false;
+        const tx = Math.floor((e.clientX + (player.x - canvas.width/2)) / TILE_SIZE);
+        const ty = Math.floor((e.clientY + (player.y - canvas.height/2)) / TILE_SIZE);
+        
+        player.swinging = 10;
+        
+        if(e.button === 0) { // Break
+            let block = world.tiles[tx][ty];
+            if(block > 0) {
+                if(block <= 3) player.inv[block-1]++;
+                world.tiles[tx][ty] = 0;
+                updateUI();
+            }
+        } else { // Place
+            if(player.inv[selectedSlot] > 0 && world.tiles[tx][ty] === 0) {
+                world.tiles[tx][ty] = selectedSlot + 1;
+                player.inv[selectedSlot]--;
+                updateUI();
+            }
         }
+    };
 
-        player.vy += 0.6; // Gravity
+    function updateUI() {
+        for(let i=0; i<4; i++) document.getElementById(`inv-${i}`).innerText = player.inv[i];
+        document.getElementById('hp').innerText = Math.ceil(player.hp);
+    }
+
+    window.game = {
+        craft: (type) => {
+            if(type === 'sword' && player.inv[2] >= 2) {
+                player.inv[2] -= 2; player.inv[3]++; updateUI();
+            }
+        }
+    };
+
+    function gameLoop() {
+        // Physics
+        if(keys['KeyA']) { player.vx = -4; player.dir = -1; player.anim += 0.2; }
+        else if(keys['KeyD']) { player.vx = 4; player.dir = 1; player.anim += 0.2; }
+        else { player.vx *= 0.8; player.anim = 0; }
+        
+        if(keys['Space'] && player.grounded) { player.vy = -11; player.grounded = false; }
+        
+        player.vy += 0.6;
         player.x += player.vx;
         player.y += player.vy;
 
-        // Simple Collision
-        const tx = Math.floor(player.x / TILE_SIZE);
-        const ty = Math.floor((player.y + player.h) / TILE_SIZE);
-        if (world.tiles[tx] && world.tiles[tx][ty] > 0) {
+        // Collision
+        let tx = Math.floor(player.x / TILE_SIZE);
+        let ty = Math.floor((player.y + player.h) / TILE_SIZE);
+        if(world.tiles[tx] && world.tiles[tx][ty] > 0) {
             player.y = ty * TILE_SIZE - player.h;
-            player.vy = 0;
-            player.grounded = true;
+            player.vy = 0; player.grounded = true;
         }
 
-        camera.x = player.x - canvas.width / 2;
-        camera.y = player.y - canvas.height / 2;
-    }
+        // Time / Sky
+        time = (time + 5) % 24000;
+        let skyVal = Math.sin(time/24000 * Math.PI);
+        document.body.style.background = `rgb(${50*skyVal}, ${135*skyVal}, ${220*skyVal})`;
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(-camera.x, -camera.y);
-
-        // Draw Tiles
-        for (let x = 0; x < world.width; x++) {
-            for (let y = 0; y < world.height; y++) {
-                if (world.tiles[x][y] === 1) ctx.fillStyle = '#8B4513'; // Dirt
-                else if (world.tiles[x][y] === 2) ctx.fillStyle = '#808080'; // Stone
-                else continue;
-                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-                ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
-        }
-
-        // Draw Player Sprite
-        ctx.fillStyle = '#f0a';
-        ctx.fillRect(player.x - player.w/2, player.y, player.w, player.h); // Body
-        ctx.fillStyle = '#000';
-        ctx.fillRect(player.x - 5, player.y + 10, 10, 10); // Eyes
-
-        ctx.restore();
-    }
-
-    function gameLoop() {
-        update();
         draw();
         requestAnimationFrame(gameLoop);
     }
 
-    // Slot selection
-    document.querySelectorAll('.slot').forEach(s => {
+    function draw() {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width/2 - player.x, canvas.height/2 - player.y);
+
+        // Draw World
+        for(let x=Math.floor(player.x/40)-20; x<Math.floor(player.x/40)+20; x++) {
+            for(let y=0; y<world.height; y++) {
+                if(!world.tiles[x] || world.tiles[x][y] === 0) continue;
+                let type = world.tiles[x][y];
+                ctx.fillStyle = type === 1 ? '#5d4037' : type === 2 ? '#757575' : '#4e342e';
+                ctx.fillRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                if(type === 1) { ctx.fillStyle = '#4caf50'; ctx.fillRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, 8); }
+            }
+        }
+
+        // Draw Character
+        ctx.save();
+        ctx.translate(player.x, player.y + 27);
+        let bob = Math.sin(player.anim) * 3;
+        
+        // Body
+        ctx.fillStyle = '#3f51b5';
+        ctx.fillRect(-10, -15 + bob, 20, 30);
+        // Head
+        ctx.fillStyle = '#ffccbc';
+        ctx.fillRect(-8, -30 + bob, 16, 16);
+        // Tool/Sword
+        if(player.swinging > 0) {
+            ctx.rotate(player.dir * (Math.PI/4));
+            player.swinging--;
+        }
+        ctx.fillStyle = selectedSlot === 3 ? '#90caf9' : '#5d4037';
+        ctx.fillRect(10*player.dir, -5, 15, 5);
+        
+        ctx.restore();
+        ctx.restore();
+    }
+
+    document.querySelectorAll('.slot').forEach((s, i) => {
         s.onclick = () => {
-            document.querySelectorAll('.slot').forEach(sl => sl.classList.remove('active'));
+            document.querySelectorAll('.slot').forEach(l => l.classList.remove('active'));
             s.classList.add('active');
-            selectedTile = parseInt(s.dataset.id);
+            selectedSlot = i;
         };
     });
+
+    updateUI();
+    gameLoop();
 </script>
 </body>
 </html>
