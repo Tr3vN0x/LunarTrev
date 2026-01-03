@@ -1,15 +1,13 @@
 <?php
 $title = "BloxHub";
-$tagline = "Connect. Play. Socialize.";
-$description = "The ultimate social layer for Roblox players.";
-$preview_image = "https://images.rbxcdn.com/f638104e76a6d6d6e2c39d73d49b1a13.png";
+$tagline = "The Roblox Social Layer";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><?php echo $title; ?> | <?php echo $tagline; ?></title>
+  <title><?php echo $title; ?></title>
   
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -17,157 +15,200 @@ $preview_image = "https://images.rbxcdn.com/f638104e76a6d6d6e2c39d73d49b1a13.png
       --bg-dark: #0a0b1e;
       --roblox-blue: #00a2ff;
       --roblox-purple: #8e44ad;
-      --neon-green: #00ffa3;
       --glass: rgba(255, 255, 255, 0.05);
       --glass-border: rgba(255, 255, 255, 0.1);
-      --admin-red: #ff4b4b;
+      --text-muted: #848bbd;
     }
 
     body { 
-      margin: 0; 
-      font-family: 'Poppins', sans-serif; 
-      background: var(--bg-dark); 
-      color: #fff; 
-      overflow-x: hidden;
-      background-image: 
-        linear-gradient(rgba(0, 162, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 162, 255, 0.05) 1px, transparent 1px);
-      background-size: 50px 50px;
+      margin: 0; font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: #fff; min-height: 100vh;
+      background-image: linear-gradient(rgba(0, 162, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 162, 255, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
 
-    h1, h2, h3, .logo { font-family: 'Fredoka One', cursive; }
+    h1, h2, .logo { font-family: 'Fredoka One', cursive; letter-spacing: 1px; }
 
-    /* --- ANIMATED BG --- */
-    .blob {
-      position: fixed;
-      width: 400px;
-      height: 400px;
-      background: var(--roblox-blue);
-      filter: blur(120px);
-      opacity: 0.15;
-      z-index: -1;
-      border-radius: 50%;
-      animation: float 20s infinite alternate;
-    }
-
-    @keyframes float {
-      from { transform: translate(-10%, -10%); }
-      to { transform: translate(100%, 50%); }
-    }
-
-    /* --- UI --- */
-    main { max-width: 480px; margin: 0 auto; padding: 1rem 1rem 100px; }
+    /* --- LAYOUT --- */
+    main { max-width: 450px; margin: 0 auto; padding: 20px 20px 100px; }
     .card { 
-      background: var(--glass); 
-      backdrop-filter: blur(15px); 
-      border: 1px solid var(--glass-border); 
-      border-radius: 20px; 
-      padding: 1.5rem; 
-      margin-bottom: 1rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); 
+      border-radius: 20px; padding: 1.2rem; margin-bottom: 1rem; position: relative;
     }
 
+    /* --- AVATARS --- */
     .avatar-ring {
-      width: 55px; height: 55px;
-      border-radius: 15px;
+      width: 50px; height: 50px; border-radius: 12px;
       background: linear-gradient(45deg, var(--roblox-blue), var(--roblox-purple));
-      padding: 2px;
+      padding: 2px; flex-shrink: 0;
     }
-    .avatar { width: 100%; height: 100%; border-radius: 13px; object-fit: cover; background: #1a1a1a; }
+    .avatar { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #111; }
 
-    .btn {
-      background: linear-gradient(90deg, var(--roblox-blue), var(--roblox-purple));
-      color: white; border: none; padding: 12px; border-radius: 12px;
-      font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 162, 255, 0.4); }
-
+    /* --- INPUTS --- */
     input, textarea {
-      background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-      padding: 12px; border-radius: 10px; color: white; width: 100%;
-      box-sizing: border-box; margin-bottom: 10px; font-family: inherit;
+      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.3); color: #fff; margin-bottom: 10px; box-sizing: border-box;
+    }
+    .btn {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      background: linear-gradient(90deg, var(--roblox-blue), var(--roblox-purple));
+      color: white; font-weight: 800; cursor: pointer; text-transform: uppercase;
     }
 
     /* --- NAV --- */
     .nav {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 400px; background: rgba(15, 15, 30, 0.9);
-      border: 1px solid var(--glass-border); padding: 15px;
-      border-radius: 25px; display: flex; justify-content: space-around;
-      backdrop-filter: blur(10px); z-index: 100;
+      width: 90%; max-width: 400px; background: rgba(15, 15, 30, 0.95);
+      border: 1px solid var(--glass-border); border-radius: 20px;
+      display: none; justify-content: space-around; padding: 12px; z-index: 100;
     }
-    .nav-item { font-size: 0.75rem; font-weight: 700; color: #666; cursor: pointer; }
+    .nav-item { color: var(--text-muted); font-size: 0.7rem; font-weight: 700; cursor: pointer; text-align: center; }
     .nav-item.active { color: var(--roblox-blue); }
 
-    .badge-admin { background: var(--admin-red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-
-    /* --- CHAT --- */
-    #chat-overlay {
-        position: fixed; inset: 0; background: var(--bg-dark); z-index: 2000;
-        display: none; flex-direction: column;
-    }
+    .hidden { display: none !important; }
+    .shout-meta { font-size: 0.75rem; font-weight: 800; color: var(--roblox-blue); margin-bottom: 4px; }
   </style>
 </head>
 <body>
 
-<div class="blob"></div>
-
 <main>
-    <div id="auth-view" class="app-section active">
-        <div class="card" style="text-align: center;">
-            <h1 style="font-size: 2.5rem; margin-bottom: 0;">BloxHub</h1>
-            <p style="color: var(--roblox-blue); margin-top: 0;">Enter the Metaverse</p>
+    <div id="auth-view" class="app-section">
+        <div class="card" style="text-align:center;">
+            <h1 style="font-size: 2.2rem; margin: 10px 0;">BloxHub</h1>
+            <p style="margin-bottom: 20px; opacity: 0.7;">Login with your Roblox ID</p>
             <form id="auth-form">
                 <input type="text" id="reg-username" placeholder="Roblox Username" required>
-                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="password" placeholder="Password" required>
                 <button type="submit" class="btn">Spawn In</button>
             </form>
         </div>
     </div>
 
-    <div id="home-tab" class="app-section" style="display:none;">
+    <div id="home-tab" class="app-section hidden">
+        <h2 id="welcome-msg">Hey, Player!</h2>
         <div class="card">
-            <h3 style="margin-top:0">Post a Shout</h3>
-            <textarea id="post-content" placeholder="What's happening in-game?" rows="2"></textarea>
+            <textarea id="post-content" placeholder="Post a global shout..." rows="2"></textarea>
             <button id="send-btn" class="btn">Post Shout</button>
         </div>
         <div id="shout-feed"></div>
     </div>
 
-    <div id="discover-tab" class="app-section" style="display:none;">
-        <h3>Your Party</h3>
+    <div id="discover-tab" class="app-section hidden">
+        <h2>Online Crew</h2>
         <div id="crew-list"></div>
     </div>
 </main>
 
-<nav class="nav" id="main-nav" style="display:none;">
-    <div class="nav-item active" data-tab="home-tab">Feed</div>
-    <div class="nav-item" data-tab="discover-tab">Party</div>
-    <div class="nav-item" data-tab="profile-tab">Profile</div>
+<nav class="nav" id="main-nav">
+    <div class="nav-item active" onclick="switchTab('home-tab')">FEED</div>
+    <div class="nav-item" onclick="switchTab('discover-tab')">CREW</div>
 </nav>
 
 <script type="module">
-    // Logic remains similar to the original Firebase setup but with updated UI targeting.
-    // Key Change: Profile Image fetching
-    const getRobloxAvatar = (username) => {
-        // In a real app, you'd fetch the UserID first, but we'll use Dicebear 
-        // as a placeholder styled like Roblox icons for this demo
-        return `https://api.dicebear.com/7.x/pixel-art/svg?seed=${username}`;
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCGTSiMcNQaAVjkEI_9YRbb2C4CTvqQWEM", 
+        authDomain: "lunartrev.firebaseapp.com", 
+        projectId: "lunartrev", 
+        storageBucket: "lunartrev.firebasestorage.app", 
+        messagingSenderId: "152908127950", 
+        appId: "1:152908127950:web:6db39b55cbe5d5b0f33a9f" 
     };
 
-    // Firebase configuration and Auth listeners would go here, 
-    // switching 'active' classes on divs to navigate the Roblox Social Hub.
-    
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.onclick = () => {
-            document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
-            document.getElementById(item.dataset.tab).style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
-        };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Tab Switching Logic
+    window.switchTab = (tabId) => {
+        document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    };
+
+    // Roblox PFP Logic (Fallback to Pixel Art if API is blocked)
+    const getPfp = (user) => `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${user}`;
+
+    // Auth Form Submission
+    document.getElementById('auth-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        const username = document.getElementById('reg-username').value;
+
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, pass);
+            await setDoc(doc(db, "users", cred.user.uid), {
+                username: username,
+                profile_Image: getPfp(username)
+            });
+        } catch (err) {
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (loginErr) {
+                alert("Auth Error: Check your credentials.");
+            }
+        }
+    };
+
+    // State Observer
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('home-tab').classList.remove('hidden');
+            document.getElementById('main-nav').style.display = 'flex';
+
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userData = userSnap.data();
+            document.getElementById('welcome-msg').innerText = `What's up, ${userData.username}!`;
+
+            // Real-time Shout Feed
+            const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snap) => {
+                const feed = document.getElementById('shout-feed');
+                feed.innerHTML = "";
+                snap.forEach(d => {
+                    const p = d.data();
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div style="display:flex; gap:12px;">
+                            <div class="avatar-ring"><img src="${p.authorImg}" class="avatar"></div>
+                            <div style="flex:1;">
+                                <div class="shout-meta">${p.authorName}</div>
+                                <div style="font-size:0.85rem; line-height:1.4;">${p.text}</div>
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+            });
+        }
     });
+
+    // Send Post Logic
+    document.getElementById('send-btn').onclick = async () => {
+        const text = document.getElementById('post-content').value.trim();
+        if (!text || !auth.currentUser) return;
+
+        const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const u = userSnap.data();
+
+        await addDoc(collection(db, "posts"), {
+            text: text,
+            authorId: auth.currentUser.uid,
+            authorName: u.username,
+            authorImg: u.profile_Image,
+            timestamp: serverTimestamp()
+        });
+
+        document.getElementById('post-content').value = "";
+    };
 </script>
 </body>
 </html>
