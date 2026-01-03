@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trevor | PLAYERREC Profile</title>
     
-    <link rel="icon" type="image/png" href="https://files.oaiusercontent.com/file-F9X6676C7DCA6A6D6C65726563?se=2026-01-03T15%3A01%3A40Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3Dplayerrec_logo.png&sig=abc123yourgeneratedlink">
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/gg-dl/ABS2GSlxgQl1kfqCNu6PcyleZEITxdXBe2d-ol8b_KY28i8D-BQyjglMGIafZJ2RTqTr8g3bW9-qvCgBmfMX9MBmIVsYC4-qdtIkQsU6Mx4CXFPQJwQ5uWOidyygOb-zuT2UZYLFk66fOox7JKSMCRkV7qSRFgFHDe4WjyCicPi2CmJrYt2ZFg=s1024-rj?authuser=1">
     
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -29,7 +29,7 @@
             line-height: 1.6;
         }
 
-        /* Nav with New Logo */
+        /* Nav with New Official Logo */
         header {
             background: #000;
             border-bottom: 2px solid var(--accent);
@@ -52,8 +52,9 @@
         .nav-logo-img {
             height: 45px;
             width: 45px;
-            border-radius: 4px;
-            border: 1px solid var(--accent);
+            border-radius: 50%; /* Circle for profile pic logo */
+            border: 2px solid var(--accent);
+            object-fit: cover;
         }
 
         .logo-text {
@@ -129,6 +130,12 @@
             color: var(--accent);
         }
 
+        /* Stats Bar Styling */
+        .stat-row { margin-bottom: 15px; }
+        .stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .stat-bar-bg { background: #23232b; height: 8px; border-radius: 10px; overflow: hidden; }
+        .stat-bar-fill { background: var(--accent); height: 100%; border-radius: 10px; }
+
         .game-tag {
             display: inline-block;
             background: #1e1e24;
@@ -165,16 +172,16 @@
 
 <header>
     <div class="logo-container">
-        <img src="https://input-image-url.com/playerrec-logo.png" alt="PLAYERREC" class="nav-logo-img">
+        <img src="https://lh3.googleusercontent.com/gg-dl/ABS2GSlxgQl1kfqCNu6PcyleZEITxdXBe2d-ol8b_KY28i8D-BQyjglMGIafZJ2RTqTr8g3bW9-qvCgBmfMX9MBmIVsYC4-qdtIkQsU6Mx4CXFPQJwQ5uWOidyygOb-zuT2UZYLFk66fOox7JKSMCRkV7qSRFgFHDe4WjyCicPi2CmJrYt2ZFg=s1024-rj?authuser=1" alt="PLAYERREC" class="nav-logo-img">
         <div class="logo-text">PLAYER<span>REC</span></div>
     </div>
-    <div style="font-size: 0.7rem; font-weight: 800; color: var(--accent); border: 1px solid var(--accent); padding: 2px 8px;">VERIFIED PROFILE</div>
+    <div style="font-size: 0.7rem; font-weight: 800; color: var(--accent); border: 1px solid var(--accent); padding: 2px 8px;">LEVEL 18 ARCHITECT</div>
 </header>
 
 <div class="main-layout">
     <div class="main-content">
         <span class="lfg-badge">OPEN RECRUITMENT</span>
-        <h1>Player Spotlight: Trevor (USA) Looking for New Peers</h1>
+        <h1>USA Creator Trevor: Seeking Peers for Community Growth</h1>
         
         <div class="slideshow-container">
             <img class="slide active" src="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/607266518_858006396834394_2937293459458675257_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=zfJdBWwtNf0Q7kNvwEYhmbO&_nc_oc=AdnSqpZcwrvGNIQryT8jDuMmwLKrKk_UhZdNXnf2Ia_NATe_NFAMm3uTtuKONwdCV5n-Hcu3tndHWpub4x3JZvvO&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=VkydFUI7FCLU6yaafvskkg&oh=00_AfoyW_pNy_nww5PcfOa7vUEGxhyg4yN8gXD0949whCua7A&oe=695EDEBA">
@@ -183,11 +190,27 @@
         </div>
 
         <div style="margin-top: 30px;">
-            <p><b>USA</b> — Trevor, 18, is officially expanding his gaming community. Known for his background in web development and a diverse gaming library, he is currently accepting new peer connections across various platforms.</p>
+            <p><b>USA</b> — Trevor, a web developer and gaming enthusiast, has launched an official peer recruitment search. His goal is to find fellow creators and gamers who share his drive for community building and web design.</p>
         </div>
     </div>
 
     <div class="sidebar">
+        <div class="widget">
+            <h3 class="widget-title">Player Stats</h3>
+            <div class="stat-row">
+                <span class="stat-label">Coding / Design</span>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 85%;"></div></div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Gaming Skill</span>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 78%;"></div></div>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Community Vibes</span>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 95%;"></div></div>
+            </div>
+        </div>
+
         <div class="widget">
             <h3 class="widget-title">Active Games</h3>
             <span class="game-tag">GTA V</span>
@@ -195,11 +218,11 @@
             <span class="game-tag">Fortnite</span>
             <span class="game-tag">Roblox</span>
             <span class="game-tag">PUBG</span>
-            <span class="game-tag">Dead By Daylight</span>
+            <span class="game-tag">DBD</span>
         </div>
 
         <div class="widget">
-            <h3 class="widget-title">Player Socials</h3>
+            <h3 class="widget-title">Connect</h3>
             <a href="javascript:void(0)" onclick="copyDiscord()" class="social-link">
                 <i class="fa-brands fa-discord"></i> Discord: Tr3vN0x
             </a>
@@ -228,7 +251,7 @@
 
     function copyDiscord() {
         navigator.clipboard.writeText("Tr3vN0x").then(() => {
-            alert("Discord ID Copied!");
+            alert("Discord ID: Tr3vN0x copied!");
         });
     }
 </script>
